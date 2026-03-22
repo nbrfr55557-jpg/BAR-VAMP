@@ -476,61 +476,176 @@ function openCreatePin(){
     <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.7">
       Choisis un code à 4 chiffres.<br>Tu en auras besoin à chaque connexion.
     </div>
-    <div class="field"><label>Nouveau PIN (4 chiffres)</label>
-      <input id="cp-pin1" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    <div id="cp-step1">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">NOUVEAU CODE</div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="cp-dots1">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" style="max-width:280px;margin:0 auto">
+        <div class="pin-key" onclick="cpKey(1,'1')">1</div><div class="pin-key" onclick="cpKey(1,'2')">2</div><div class="pin-key" onclick="cpKey(1,'3')">3</div>
+        <div class="pin-key" onclick="cpKey(1,'4')">4</div><div class="pin-key" onclick="cpKey(1,'5')">5</div><div class="pin-key" onclick="cpKey(1,'6')">6</div>
+        <div class="pin-key" onclick="cpKey(1,'7')">7</div><div class="pin-key" onclick="cpKey(1,'8')">8</div><div class="pin-key" onclick="cpKey(1,'9')">9</div>
+        <div class="pin-key empty-key"></div><div class="pin-key" onclick="cpKey(1,'0')">0</div><div class="pin-key" onclick="cpDel(1)">⌫</div>
+      </div>
     </div>
-    <div class="field"><label>Confirme le PIN</label>
-      <input id="cp-pin2" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
-    </div>
-    <button class="btn btn-amber" onclick="saveCreatePin()">ENREGISTRER MON CODE</button>`;
+    <div id="cp-step2" style="display:none">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">CONFIRME TON CODE</div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="cp-dots2">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" style="max-width:280px;margin:0 auto">
+        <div class="pin-key" onclick="cpKey(2,'1')">1</div><div class="pin-key" onclick="cpKey(2,'2')">2</div><div class="pin-key" onclick="cpKey(2,'3')">3</div>
+        <div class="pin-key" onclick="cpKey(2,'4')">4</div><div class="pin-key" onclick="cpKey(2,'5')">5</div><div class="pin-key" onclick="cpKey(2,'6')">6</div>
+        <div class="pin-key" onclick="cpKey(2,'7')">7</div><div class="pin-key" onclick="cpKey(2,'8')">8</div><div class="pin-key" onclick="cpKey(2,'9')">9</div>
+        <div class="pin-key empty-key"></div><div class="pin-key" onclick="cpKey(2,'0')">0</div><div class="pin-key" onclick="cpDel(2)">⌫</div>
+      </div>
+    </div>`;
   openSheet();
-  setTimeout(()=>document.getElementById('cp-pin1').focus(),100);
 }
 
-function saveCreatePin(){
-  const p1=document.getElementById('cp-pin1').value.trim();
-  const p2=document.getElementById('cp-pin2').value.trim();
-  if(!/^\d{4}$/.test(p1))return toast('PIN = 4 chiffres','ko');
-  if(p1!==p2)return toast('Les codes ne correspondent pas','ko');
+let cpBuf1='', cpBuf2='';
+
+function cpKey(step, n){
+  if(step===1){
+    if(cpBuf1.length>=4)return;
+    cpBuf1+=n;
+    cpUpdDots('cp-dots1', cpBuf1);
+    if(cpBuf1.length===4){
+      document.getElementById('cp-step1').style.display='none';
+      document.getElementById('cp-step2').style.display='block';
+      cpBuf2='';
+      cpUpdDots('cp-dots2','');
+    }
+  } else {
+    if(cpBuf2.length>=4)return;
+    cpBuf2+=n;
+    cpUpdDots('cp-dots2', cpBuf2);
+    if(cpBuf2.length===4) cpValidate();
+  }
+}
+
+function cpDel(step){
+  if(step===1){ cpBuf1=cpBuf1.slice(0,-1); cpUpdDots('cp-dots1',cpBuf1); }
+  else { cpBuf2=cpBuf2.slice(0,-1); cpUpdDots('cp-dots2',cpBuf2); }
+}
+
+function cpUpdDots(containerId, buf){
+  const dots=document.getElementById(containerId).querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>{ d.className='pin-dot'+(i<buf.length?' on':''); });
+}
+
+function cpValidate(){
+  if(cpBuf1!==cpBuf2){
+    toast('Les codes ne correspondent pas','ko');
+    // Retour à l'étape 1
+    cpBuf1=''; cpBuf2='';
+    document.getElementById('cp-step1').style.display='block';
+    document.getElementById('cp-step2').style.display='none';
+    cpUpdDots('cp-dots1','');
+    return;
+  }
   const m=getM(currentMemberId);
-  m.pin=p1;saveM();
+  m.pin=cpBuf1; saveM();
   toast('Code PIN créé !','ok');
-  closeSheet();
-  refreshDash();
-  resetTimer();
+  closeSheet(); refreshDash(); resetTimer();
 }
 
 function openChangePin(){
   stopTimer();
   document.getElementById('sheet-body').innerHTML=`
     <div class="sheet-title">Modifier mon PIN</div>
-    <div class="field"><label>Ancien PIN</label>
-      <input id="chp-old" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    <div id="chp-step1">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">ANCIEN CODE</div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots1">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" style="max-width:280px;margin:0 auto">
+        <div class="pin-key" onclick="chpKey(1,'1')">1</div><div class="pin-key" onclick="chpKey(1,'2')">2</div><div class="pin-key" onclick="chpKey(1,'3')">3</div>
+        <div class="pin-key" onclick="chpKey(1,'4')">4</div><div class="pin-key" onclick="chpKey(1,'5')">5</div><div class="pin-key" onclick="chpKey(1,'6')">6</div>
+        <div class="pin-key" onclick="chpKey(1,'7')">7</div><div class="pin-key" onclick="chpKey(1,'8')">8</div><div class="pin-key" onclick="chpKey(1,'9')">9</div>
+        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(1,'0')">0</div><div class="pin-key" onclick="chpDel(1)">⌫</div>
+      </div>
     </div>
-    <div class="field"><label>Nouveau PIN</label>
-      <input id="chp-new1" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    <div id="chp-step2" style="display:none">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">NOUVEAU CODE</div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots2">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" style="max-width:280px;margin:0 auto">
+        <div class="pin-key" onclick="chpKey(2,'1')">1</div><div class="pin-key" onclick="chpKey(2,'2')">2</div><div class="pin-key" onclick="chpKey(2,'3')">3</div>
+        <div class="pin-key" onclick="chpKey(2,'4')">4</div><div class="pin-key" onclick="chpKey(2,'5')">5</div><div class="pin-key" onclick="chpKey(2,'6')">6</div>
+        <div class="pin-key" onclick="chpKey(2,'7')">7</div><div class="pin-key" onclick="chpKey(2,'8')">8</div><div class="pin-key" onclick="chpKey(2,'9')">9</div>
+        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(2,'0')">0</div><div class="pin-key" onclick="chpDel(2)">⌫</div>
+      </div>
     </div>
-    <div class="field"><label>Confirme le nouveau PIN</label>
-      <input id="chp-new2" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
-    </div>
-    <button class="btn btn-amber" onclick="saveChangePin()">CHANGER MON CODE</button>`;
+    <div id="chp-step3" style="display:none">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">CONFIRME LE NOUVEAU CODE</div>
+      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots3">
+        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+      </div>
+      <div class="pin-pad" style="max-width:280px;margin:0 auto">
+        <div class="pin-key" onclick="chpKey(3,'1')">1</div><div class="pin-key" onclick="chpKey(3,'2')">2</div><div class="pin-key" onclick="chpKey(3,'3')">3</div>
+        <div class="pin-key" onclick="chpKey(3,'4')">4</div><div class="pin-key" onclick="chpKey(3,'5')">5</div><div class="pin-key" onclick="chpKey(3,'6')">6</div>
+        <div class="pin-key" onclick="chpKey(3,'7')">7</div><div class="pin-key" onclick="chpKey(3,'8')">8</div><div class="pin-key" onclick="chpKey(3,'9')">9</div>
+        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(3,'0')">0</div><div class="pin-key" onclick="chpDel(3)">⌫</div>
+      </div>
+    </div>`;
   openSheet();
-  setTimeout(()=>document.getElementById('chp-old').focus(),100);
 }
 
-function saveChangePin(){
-  const old=document.getElementById('chp-old').value.trim();
-  const n1=document.getElementById('chp-new1').value.trim();
-  const n2=document.getElementById('chp-new2').value.trim();
+let chpBuf1='', chpBuf2='', chpBuf3='';
+
+function chpKey(step, n){
+  if(step===1){
+    if(chpBuf1.length>=4)return;
+    chpBuf1+=n; chpUpdDots('chp-dots1',chpBuf1);
+    if(chpBuf1.length===4){
+      const m=getM(currentMemberId);
+      if(chpBuf1!==m.pin){
+        toast('Ancien code incorrect','ko');
+        chpBuf1=''; chpUpdDots('chp-dots1',''); return;
+      }
+      document.getElementById('chp-step1').style.display='none';
+      document.getElementById('chp-step2').style.display='block';
+    }
+  } else if(step===2){
+    if(chpBuf2.length>=4)return;
+    chpBuf2+=n; chpUpdDots('chp-dots2',chpBuf2);
+    if(chpBuf2.length===4){
+      document.getElementById('chp-step2').style.display='none';
+      document.getElementById('chp-step3').style.display='block';
+    }
+  } else {
+    if(chpBuf3.length>=4)return;
+    chpBuf3+=n; chpUpdDots('chp-dots3',chpBuf3);
+    if(chpBuf3.length===4) chpValidate();
+  }
+}
+
+function chpDel(step){
+  if(step===1){ chpBuf1=chpBuf1.slice(0,-1); chpUpdDots('chp-dots1',chpBuf1); }
+  else if(step===2){ chpBuf2=chpBuf2.slice(0,-1); chpUpdDots('chp-dots2',chpBuf2); }
+  else { chpBuf3=chpBuf3.slice(0,-1); chpUpdDots('chp-dots3',chpBuf3); }
+}
+
+function chpUpdDots(containerId, buf){
+  const dots=document.getElementById(containerId).querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>{ d.className='pin-dot'+(i<buf.length?' on':''); });
+}
+
+function chpValidate(){
+  if(chpBuf2!==chpBuf3){
+    toast('Les nouveaux codes ne correspondent pas','ko');
+    chpBuf2=''; chpBuf3='';
+    document.getElementById('chp-step2').style.display='block';
+    document.getElementById('chp-step3').style.display='none';
+    chpUpdDots('chp-dots2','');
+    return;
+  }
   const m=getM(currentMemberId);
-  if(old!==m.pin)return toast('Ancien code incorrect','ko');
-  if(!/^\d{4}$/.test(n1))return toast('Nouveau PIN = 4 chiffres','ko');
-  if(n1!==n2)return toast('Les nouveaux codes ne correspondent pas','ko');
-  m.pin=n1;saveM();
+  m.pin=chpBuf2; saveM();
   toast('Code PIN modifié','ok');
-  closeSheet();
-  refreshDash();
-  resetTimer();
+  closeSheet(); refreshDash(); resetTimer();
 }
 
 // ── CONSO ──
@@ -835,6 +950,19 @@ function resetMemberPin(id){
 
 function deleteMember(id){
   const m=getM(id);
+  const existing=document.getElementById('del-confirm-'+id);
+  if(existing){ existing.remove(); }
+  const row=document.querySelector(`button[onclick="deleteMember('${id}')"]`).closest('.recap-row');
+  if(!row)return;
+  const bar=document.createElement('div');
+  bar.id='del-confirm-'+id;
+  bar.style.cssText='background:var(--red-d);border:1px solid var(--red);border-radius:6px;padding:8px 12px;margin:4px 16px;font-family:var(--mono);font-size:11px;color:var(--red);display:flex;align-items:center;justify-content:space-between;gap:8px';
+  bar.innerHTML=`<span>Supprimer ${m.name} définitivement ?</span><button onclick="confirmDeleteMember('${id}')" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:5px 12px;font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:500">Oui</button>`;
+  row.after(bar);
+  setTimeout(()=>{if(bar.parentNode)bar.remove();},5000);
+}
+
+function confirmDeleteMember(id){
   members=members.filter(x=>x.id!==id);saveM();
   toast('Membre supprimé','');renderAdmin();
 }
