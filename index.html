@@ -1,0 +1,1068 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Bar Asso">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-512.png">
+<link rel="icon" type="image/png" href="icon-512.png">
+<title>Bar des Vampires</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root {
+  --bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--s3:#272727;
+  --border:#2e2e2e;--amber:#f0a500;--amber2:#ffd166;
+  --green:#2ecc71;--green-d:#0d3b22;
+  --red:#e74c3c;--red-d:#3b0d0d;
+  --text:#f0ece4;--muted:#6b6b6b;--dim:#3a3a3a;
+  --r:14px;--r-sm:9px;
+  --mono:'IBM Plex Mono',monospace;
+  --sans:'IBM Plex Sans',sans-serif;
+  --display:'Syne',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;flex-direction:column;height:100dvh}
+.screen{display:none;flex-direction:column;height:100dvh;overflow:hidden}
+#s-admin{overflow-y:auto;height:auto;min-height:100dvh}
+.screen.active{display:flex}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0;background:var(--s1)}
+.logo{font-family:var(--display);font-size:22px;font-weight:800;color:var(--amber);letter-spacing:-.5px}
+.logo sub{font-family:var(--mono);font-size:10px;color:var(--muted);display:block;font-weight:400;letter-spacing:2px;line-height:1.2}
+.btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:var(--r-sm);font-family:var(--mono);cursor:pointer;transition:all .15s;user-select:none}
+.btn:active{transform:scale(.95)}
+.btn-ghost{background:var(--s2);border:1px solid var(--border);color:var(--muted);padding:8px 14px;font-size:11px;letter-spacing:1px}
+.btn-ghost:hover{border-color:var(--dim);color:var(--text)}
+.btn-amber{background:var(--amber);color:#000;padding:14px 24px;font-size:14px;font-weight:500;letter-spacing:.5px;width:100%}
+.btn-amber:hover{background:var(--amber2)}
+.btn-green{background:var(--green-d);border:1px solid var(--green);color:var(--green);padding:10px 16px;font-size:13px}
+.btn-green:hover{background:var(--green);color:#000}
+.btn-red{background:var(--red-d);border:1px solid var(--red);color:var(--red);padding:10px 16px;font-size:13px}
+.btn-red:hover{background:var(--red);color:#fff}
+.btn-sm{padding:6px 12px!important;font-size:11px!important}
+.row{display:flex;gap:8px}
+.flex1{flex:1}
+/* HOME */
+.home-body{flex:1;overflow-y:auto;padding:20px}
+.section-label{font-family:var(--mono);font-size:10px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:12px}
+.member-list{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.member-tile{display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r);padding:14px 8px;cursor:pointer;transition:all .15s;text-align:center}
+.member-tile:hover{border-color:var(--dim);background:var(--s2)}
+.member-tile:active{transform:scale(.96)}
+.avatar{width:42px;height:42px;border-radius:50%;background:var(--s3);border:1px solid var(--dim);display:flex;align-items:center;justify-content:center;font-family:var(--display);font-weight:800;font-size:15px;color:var(--amber);flex-shrink:0}
+.tile-name{font-weight:500;font-size:15px;color:var(--text)}
+.tile-balance{font-family:var(--mono);font-size:12px;margin-top:3px}
+.pos{color:var(--green)}.neg{color:var(--red)}.zero{color:var(--muted)}
+.empty{text-align:center;padding:50px 20px;color:var(--muted);font-size:14px}
+.empty .ico{font-size:36px;margin-bottom:12px;opacity:.3}
+/* PIN */
+.pin-wrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:24px}
+.pin-who{font-family:var(--display);font-size:28px;font-weight:800;color:var(--text);text-align:center}
+.pin-sub{font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center}
+.pin-dots{display:flex;gap:14px;justify-content:center}
+.pin-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);transition:all .18s}
+.pin-dot.on{background:var(--amber);border-color:var(--amber)}
+.pin-dot.err{background:var(--red);border-color:var(--red)}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;max-width:280px}
+.pin-key{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:20px;font-family:var(--display);font-size:24px;font-weight:700;color:var(--text);text-align:center;cursor:pointer;transition:all .12s;user-select:none}
+.pin-key:hover{background:var(--s3);border-color:var(--dim)}
+.pin-key:active{transform:scale(.88);background:var(--amber);color:#000;border-color:var(--amber)}
+.pin-key.empty-key{pointer-events:none;background:transparent;border-color:transparent}
+/* DASH */
+.dash-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.balance-card{background:linear-gradient(135deg,var(--s2) 0%,var(--s1) 100%);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;position:relative;overflow:hidden}
+.balance-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:var(--amber);opacity:.04}
+.balance-label{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.balance-value{font-family:var(--display);font-size:52px;font-weight:800;line-height:1}
+.balance-sub{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:8px}
+.conso-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.conso-btn{background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:22px 14px;text-align:center;cursor:pointer;transition:all .15s;user-select:none}
+.conso-btn:hover{border-color:var(--amber);background:var(--s3)}
+.conso-btn:active{transform:scale(.93);background:var(--s3)}
+.conso-icon{font-size:30px;margin-bottom:8px}
+.conso-label{font-family:var(--display);font-weight:700;font-size:17px;color:var(--text)}
+.conso-price{font-family:var(--mono);font-size:14px;color:var(--amber);margin-top:4px}
+.timer-bar-wrap{height:3px;background:var(--s3);border-radius:2px;overflow:hidden}
+.timer-bar{height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width 1s linear}
+.logout-hint{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:center;margin-top:6px}
+.history-list{display:flex;flex-direction:column;gap:6px}
+.hist-item{display:flex;align-items:center;gap:10px;background:var(--s1);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px}
+.hist-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.hist-info{flex:1}
+.hist-label{font-size:13px;color:var(--text)}
+.hist-date{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px}
+.hist-amount{font-family:var(--mono);font-size:13px;font-weight:500}
+/* ADMIN */
+.admin-body{padding:16px;display:flex;flex-direction:column;gap:14px;padding-bottom:40px}
+.card{background:var(--s1);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.card-head{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--s2);border-bottom:1px solid var(--border)}
+.card-title{font-family:var(--mono);font-size:11px;letter-spacing:2px;color:var(--amber);text-transform:uppercase}
+.card-body{padding:4px 0}
+.recap-row{display:flex;align-items:center;gap:10px;padding:12px 16px;border-bottom:1px solid var(--border)}
+.recap-row:last-child{border-bottom:none}
+.recap-name{flex:1;font-size:14px;font-weight:500}
+.recap-bal{font-family:var(--mono);font-size:14px;font-weight:500;min-width:72px;text-align:right}
+.recap-check{width:22px;height:22px;border-radius:6px;border:2px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;font-size:13px}
+.recap-check.sel{background:var(--amber);border-color:var(--amber);color:#000}
+/* SHEET */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:100;align-items:flex-end;justify-content:center;backdrop-filter:blur(6px)}
+.overlay.open{display:flex}
+.sheet{background:var(--s1);border:1px solid var(--border);border-radius:var(--r) var(--r) 0 0;padding:24px 20px 40px;width:100%;max-width:500px;max-height:88dvh;overflow-y:auto;animation:up .22s ease-out;position:relative}
+@keyframes up{from{transform:translateY(32px);opacity:0}to{transform:translateY(0);opacity:1}}
+.sheet-title{font-family:var(--display);font-size:20px;font-weight:800;color:var(--amber);margin-bottom:18px}
+.sheet-close{position:absolute;top:18px;right:18px;background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;line-height:1}
+.field{margin-bottom:14px}
+.field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.field input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;transition:border-color .15s}
+.field input:focus{border-color:var(--amber)}
+.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.q-btn{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 4px;font-family:var(--mono);font-size:12px;color:var(--amber2);text-align:center;cursor:pointer;transition:all .12s}
+.q-btn:hover{background:var(--s3);border-color:var(--amber)}
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:10px 18px;font-family:var(--mono);font-size:13px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.ok{border-color:var(--green);color:var(--green)}
+.toast.ko{border-color:var(--red);color:var(--red)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border)}
+</style>
+</head>
+<body>
+
+<!-- HOME -->
+<div id="s-home" class="screen active">
+  <div class="topbar">
+    <div class="logo">Bar des Vampires<sub>asso</sub></div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Caisse</div>
+      <div id="bar-solde" style="font-family:var(--mono);font-size:15px;font-weight:500"></div>
+    </div>
+    <button class="btn btn-ghost" onclick="openAdminPin()">ADMIN</button>
+  </div>
+  <div class="home-body">
+    <div class="section-label">Qui es-tu ?</div>
+    <div class="member-list" id="home-list"></div>
+  </div>
+</div>
+
+<!-- PIN MEMBRE -->
+<div id="s-pin" class="screen">
+  <div class="topbar">
+    <div class="logo">Bar<sub>asso</sub></div>
+    <button class="btn btn-ghost" onclick="goHome()">← Retour</button>
+  </div>
+  <div class="pin-wrap">
+    <div style="text-align:center">
+      <div class="pin-who" id="pin-who"></div>
+      <div class="pin-sub" style="margin-top:6px">ENTRE TON CODE</div>
+    </div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
+      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="pk(1)">1</div><div class="pin-key" onclick="pk(2)">2</div><div class="pin-key" onclick="pk(3)">3</div>
+      <div class="pin-key" onclick="pk(4)">4</div><div class="pin-key" onclick="pk(5)">5</div><div class="pin-key" onclick="pk(6)">6</div>
+      <div class="pin-key" onclick="pk(7)">7</div><div class="pin-key" onclick="pk(8)">8</div><div class="pin-key" onclick="pk(9)">9</div>
+      <div class="pin-key empty-key"></div><div class="pin-key" onclick="pk(0)">0</div><div class="pin-key" onclick="pkDel()">⌫</div>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD MEMBRE -->
+<div id="s-dash" class="screen">
+  <div class="topbar">
+    <div class="logo">Bar<sub>asso</sub></div>
+    <button class="btn btn-ghost" onclick="doLogout()">Déco</button>
+  </div>
+  <div class="dash-body">
+
+    <!-- Bandeau PIN (visible si pas de PIN) -->
+    <div id="pin-banner" style="display:none;background:#1a1200;border:1px solid #7c5c00;border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px">🔐</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:#fbbf24">Aucun code PIN défini</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">Crée ton code pour sécuriser ton compte</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="border-color:#7c5c00;color:#fbbf24;white-space:nowrap" onclick="openCreatePin()">Créer</button>
+    </div>
+
+    <div class="balance-card">
+      <div class="balance-label">Mon solde</div>
+      <div class="balance-value" id="dash-balance">0,00 €</div>
+      <div class="balance-sub" id="dash-name-sub"></div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:10px">Consommer</div>
+
+      <!-- Bouton principal -->
+      <div class="conso-btn" onclick="addConso()" style="width:100%;padding:28px 14px">
+        <div class="conso-icon">✕</div>
+        <div class="conso-label">1 conso</div>
+        <div class="conso-price">0,60 €</div>
+      </div>
+
+      <!-- Récap panier (caché si 0) -->
+      <div id="conso-recap" style="display:none;margin-top:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+          <div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">À valider</div>
+            <div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--text)"><span id="recap-count">0</span> conso<span id="recap-plural"></span></div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--amber)" id="recap-total">0,00 €</div>
+            <button onclick="resetConso()" style="background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;margin-top:4px">✕ annuler</button>
+          </div>
+        </div>
+        <button class="btn btn-amber" onclick="validerConso()">VALIDER</button>
+      </div>
+    </div>
+    <div>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="logout-hint">Déconnexion auto dans <span id="timer-sec">15</span>s</div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px">Dernières transactions</div>
+      <div class="history-list" id="dash-history"></div>
+    </div>
+
+    <!-- Modifier PIN (visible si PIN déjà défini) -->
+    <div id="change-pin-wrap" style="display:none;padding-bottom:8px">
+      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:11px;letter-spacing:1px" onclick="openChangePin()">🔑 Modifier mon code PIN</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- PIN ADMIN -->
+<div id="s-admin-pin" class="screen">
+  <div class="topbar">
+    <div class="logo">Bar<sub>asso</sub></div>
+    <button class="btn btn-ghost" onclick="goHome()">← Retour</button>
+  </div>
+  <div class="pin-wrap">
+    <div style="text-align:center">
+      <div class="pin-who">Admin</div>
+      <div class="pin-sub" style="margin-top:6px">CODE GESTIONNAIRE</div>
+    </div>
+    <div class="pin-dots">
+      <div class="pin-dot" id="apd0"></div><div class="pin-dot" id="apd1"></div>
+      <div class="pin-dot" id="apd2"></div><div class="pin-dot" id="apd3"></div>
+    </div>
+    <div class="pin-pad">
+      <div class="pin-key" onclick="apk(1)">1</div><div class="pin-key" onclick="apk(2)">2</div><div class="pin-key" onclick="apk(3)">3</div>
+      <div class="pin-key" onclick="apk(4)">4</div><div class="pin-key" onclick="apk(5)">5</div><div class="pin-key" onclick="apk(6)">6</div>
+      <div class="pin-key" onclick="apk(7)">7</div><div class="pin-key" onclick="apk(8)">8</div><div class="pin-key" onclick="apk(9)">9</div>
+      <div class="pin-key empty-key"></div><div class="pin-key" onclick="apk(0)">0</div><div class="pin-key" onclick="apkDel()">⌫</div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN -->
+<div id="s-admin" class="screen">
+  <div class="topbar">
+    <div class="logo">Bar des Vampires<sub>admin</sub></div>
+    <button class="btn btn-ghost" onclick="goHome()">← Quitter</button>
+  </div>
+  <div class="admin-body">
+
+    <!-- Alerte export -->
+    <div id="export-alert" style="display:none;background:#1a0d00;border:1px solid var(--amber);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px;flex-shrink:0">⚠️</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--amber)" id="export-alert-msg">Aucune sauvegarde récente</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">Pense à exporter un fichier Excel pour la comptabilité</div>
+      </div>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--amber);color:var(--amber);white-space:nowrap" onclick="openExportSheet()">↓ Exporter</button>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Récap comptes</div>
+        <button class="btn btn-ghost btn-sm" onclick="openExportSheet()">↓ Export Excel</button>
+      </div>
+      <div class="card-body" id="admin-recap"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Action groupée (membres cochés)</div></div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="field">
+          <label>Montant (€)</label>
+          <input id="bulk-amount" type="number" step="0.1" min="0.1" placeholder="ex : 5.00">
+          <div class="quick-row">
+            <div class="q-btn" onclick="setBulk(0.6)">0,60</div>
+            <div class="q-btn" onclick="setBulk(1.2)">1,20</div>
+            <div class="q-btn" onclick="setBulk(5)">5 €</div>
+            <div class="q-btn" onclick="setBulk(10)">10 €</div>
+          </div>
+        </div>
+        <div class="field">
+          <label>Commentaire (optionnel)</label>
+          <input id="bulk-comment" type="text" placeholder="ex : Sortie karting, Cotisation…">
+        </div>
+        <div id="bulk-sel-count" class="section-label" style="margin-bottom:10px">0 membre(s) sélectionné(s)</div>
+        <div class="row">
+          <button class="btn btn-green flex1" onclick="bulkAction('add')">+ Créditer</button>
+          <button class="btn btn-red flex1" onclick="bulkAction('sub')">− Débiter</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Membres</div>
+        <button class="btn btn-ghost btn-sm" onclick="openAddMember()">+ Ajouter</button>
+      </div>
+      <div class="card-body" id="admin-members"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Paramètres</div></div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="field">
+          <label>Prix d'une croix (€)</label>
+          <input id="tick-value" type="number" step="0.05" min="0.05" placeholder="0.60">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Valeur actuelle : <span id="tick-current"></span></div>
+        </div>
+        <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- SHEET -->
+<div class="overlay" id="overlay" onclick="overlayClick(event)">
+  <div class="sheet" id="sheet">
+    <button class="sheet-close" onclick="closeSheet()">×</button>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const ADMIN_PIN='6665'; // ← CHANGER AVANT DÉPLOIEMENT
+const DEFAULT_TICK=0.60;
+function getTick(){return parseFloat(ls('bar2_tick',DEFAULT_TICK))||DEFAULT_TICK;}
+const AUTO_LOGOUT=15;
+
+function ls(k,d){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}}
+function ss(k,v){localStorage.setItem(k,JSON.stringify(v))}
+
+const DEFAULT_MEMBERS=[
+  'ROBIN','VLAD','KARL','MARCO','BADBOY','SULLY','PAT','HARPER','DUDU','BILLY',
+  'DUKE','LEON','STAN','PISTON','GASTON','FELIX','BARBIE','CAMERON','BLAKE','THEO',
+  'DIM','ILIAS','RAPHAEL','BRIEUC','CLOVIS','VENUS','ALEX','MOWGLI','BEAUMONT','VINCENT',
+  'FLOYD','FREDDY','ARYA','PIETRO','LINO','SHIFTY','RUDY','KELLY','FLEUR','TOMMY','TAC'
+].map((name,i)=>({id:'m'+(1000+i),name,pin:null,balance:0,history:[]}));
+
+let members=ls('bar2_members',null);
+if(!members){ members=DEFAULT_MEMBERS; ss('bar2_members',members); }
+function saveM(){ss('bar2_members',members)}
+function getM(id){return members.find(m=>m.id===id)}
+
+function addTx(id,type,label,amount){
+  const m=getM(id);if(!m)return;
+  if(!m.history)m.history=[];
+  const sign=(type==='conso'||type==='debit')?-1:1;
+  m.balance=Math.round(((m.balance||0)+sign*amount)*100)/100;
+  m.history.unshift({id:Date.now(),date:new Date().toISOString(),type,label,amount});
+  if(m.history.length>50)m.history.length=50;
+  saveM();
+}
+
+function showScreen(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function goHome(){stopTimer();currentMemberId=null;renderHome();showScreen('s-home')}
+
+// HOME
+function getBarSolde(){
+  return Math.round(members.reduce((s,m)=>s+(m.balance||0),0)*100)/100;
+}
+
+function renderHome(){
+  const solde=getBarSolde();
+  const barEl=document.getElementById('bar-solde');
+  if(barEl){
+    barEl.textContent=(solde>=0?'+':'')+solde.toFixed(2)+' €';
+    barEl.style.color=solde>0?'var(--green)':solde<0?'var(--red)':'var(--muted)';
+  }
+  const el=document.getElementById('home-list');
+  if(!members.length){el.innerHTML=`<div class="empty"><div class="ico">🍺</div>Aucun membre — ajoute-en via l'admin</div>`;return}
+  el.innerHTML=members.map(m=>{
+    const b=m.balance||0;
+    const cls=b>0?'pos':b<0?'neg':'zero';
+    const ini=(m.name||'?').slice(0,2).toUpperCase();
+    return`<div class="member-tile" onclick="startPinFor('${m.id}')">
+      <div class="avatar">${ini}</div>
+      <div class="tile-name">${m.name}</div>
+      <div class="tile-balance ${cls}">${b>=0?'+':''}${b.toFixed(2)} €</div>
+    </div>`;
+  }).join('');
+}
+
+// PIN MEMBRE
+let currentMemberId=null,pinBuf='';
+
+function startPinFor(id){
+  const m=getM(id);if(!m)return;
+  if(!m.pin){openDash(id);return}
+  currentMemberId=id;pinBuf='';
+  document.getElementById('pin-who').textContent=m.name;
+  updDots('p',pinBuf,false);
+  showScreen('s-pin');
+}
+
+function pk(n){if(pinBuf.length>=4)return;pinBuf+=n;updDots('p',pinBuf,false);if(pinBuf.length===4)checkPin()}
+function pkDel(){pinBuf=pinBuf.slice(0,-1);updDots('p',pinBuf,false)}
+function checkPin(){
+  const m=getM(currentMemberId);
+  if(pinBuf===m.pin){openDash(currentMemberId)}
+  else{updDots('p','',true);pinBuf='';toast('Code incorrect','ko');setTimeout(()=>updDots('p','',false),600)}
+}
+
+function updDots(prefix,buf,err){
+  const ids=prefix==='p'?['pd0','pd1','pd2','pd3']:['apd0','apd1','apd2','apd3'];
+  ids.forEach((id,i)=>{const d=document.getElementById(id);if(d)d.className='pin-dot'+(err?' err':i<buf.length?' on':'')});
+}
+
+// DASH
+let timerInterval=null,timerLeft=AUTO_LOGOUT;
+
+function openDash(id){currentMemberId=id;consoCount=0;updateConsoRecap();refreshDash();showScreen('s-dash');resetTimer()}
+
+function refreshDash(){
+  const m=getM(currentMemberId);if(!m)return;
+  const b=m.balance||0;
+  const el=document.getElementById('dash-balance');
+  el.textContent=(b>=0?'+':'')+b.toFixed(2)+' €';
+  el.className='balance-value '+(b>0?'pos':b<0?'neg':'zero');
+  document.getElementById('dash-name-sub').textContent=m.name;
+  // Bandeau PIN
+  const banner=document.getElementById('pin-banner');
+  const changeWrap=document.getElementById('change-pin-wrap');
+  if(m.pin){banner.style.display='none';changeWrap.style.display='block';}
+  else{banner.style.display='flex';changeWrap.style.display='none';}
+  renderDashHist(m);
+}
+
+function renderDashHist(m){
+  const hist=(m.history||[]).slice(0,20);
+  const el=document.getElementById('dash-history');
+  if(!hist.length){el.innerHTML=`<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">Aucune transaction</div>`;return}
+  const colors={conso:'var(--red)',recharge:'var(--green)',credit:'var(--amber)',debit:'var(--muted)'};
+  el.innerHTML=hist.map(h=>{
+    const isPos=h.type==='recharge'||h.type==='credit';
+    const date=new Date(h.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return`<div class="hist-item">
+      <div class="hist-dot" style="background:${colors[h.type]||'var(--muted)'}"></div>
+      <div class="hist-info"><div class="hist-label">${h.label}</div><div class="hist-date">${date}</div></div>
+      <div class="hist-amount ${isPos?'pos':'neg'}">${isPos?'+':'-'}${h.amount.toFixed(2)} €</div>
+    </div>`;
+  }).join('');
+}
+
+// ── GESTION PIN MEMBRE (depuis le dashboard) ──
+function openCreatePin(){
+  stopTimer();
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Créer ton code PIN</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.7">
+      Choisis un code à 4 chiffres.<br>Tu en auras besoin à chaque connexion.
+    </div>
+    <div class="field"><label>Nouveau PIN (4 chiffres)</label>
+      <input id="cp-pin1" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    </div>
+    <div class="field"><label>Confirme le PIN</label>
+      <input id="cp-pin2" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    </div>
+    <button class="btn btn-amber" onclick="saveCreatePin()">ENREGISTRER MON CODE</button>`;
+  openSheet();
+  setTimeout(()=>document.getElementById('cp-pin1').focus(),100);
+}
+
+function saveCreatePin(){
+  const p1=document.getElementById('cp-pin1').value.trim();
+  const p2=document.getElementById('cp-pin2').value.trim();
+  if(!/^\d{4}$/.test(p1))return toast('PIN = 4 chiffres','ko');
+  if(p1!==p2)return toast('Les codes ne correspondent pas','ko');
+  const m=getM(currentMemberId);
+  m.pin=p1;saveM();
+  toast('Code PIN créé !','ok');
+  closeSheet();
+  refreshDash();
+  resetTimer();
+}
+
+function openChangePin(){
+  stopTimer();
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Modifier mon PIN</div>
+    <div class="field"><label>Ancien PIN</label>
+      <input id="chp-old" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    </div>
+    <div class="field"><label>Nouveau PIN</label>
+      <input id="chp-new1" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    </div>
+    <div class="field"><label>Confirme le nouveau PIN</label>
+      <input id="chp-new2" type="password" maxlength="4" inputmode="numeric" placeholder="••••">
+    </div>
+    <button class="btn btn-amber" onclick="saveChangePin()">CHANGER MON CODE</button>`;
+  openSheet();
+  setTimeout(()=>document.getElementById('chp-old').focus(),100);
+}
+
+function saveChangePin(){
+  const old=document.getElementById('chp-old').value.trim();
+  const n1=document.getElementById('chp-new1').value.trim();
+  const n2=document.getElementById('chp-new2').value.trim();
+  const m=getM(currentMemberId);
+  if(old!==m.pin)return toast('Ancien code incorrect','ko');
+  if(!/^\d{4}$/.test(n1))return toast('Nouveau PIN = 4 chiffres','ko');
+  if(n1!==n2)return toast('Les nouveaux codes ne correspondent pas','ko');
+  m.pin=n1;saveM();
+  toast('Code PIN modifié','ok');
+  closeSheet();
+  refreshDash();
+  resetTimer();
+}
+
+// ── CONSO ──
+let consoCount=0;
+
+function addConso(){
+  consoCount++;
+  updateConsoRecap();
+  resetTimer();
+}
+
+function updateConsoRecap(){
+  const tick=getTick();
+  const total=Math.round(consoCount*tick*100)/100;
+  document.getElementById('recap-count').textContent=consoCount;
+  document.getElementById('recap-plural').textContent=consoCount>1?'s':'';
+  document.getElementById('recap-total').textContent=total.toFixed(2)+' €';
+  document.getElementById('conso-recap').style.display=consoCount>0?'block':'none';
+}
+
+function resetConso(){
+  consoCount=0;
+  updateConsoRecap();
+  resetTimer();
+}
+
+function validerConso(){
+  if(!consoCount)return;
+  const tick=getTick();
+  const amount=Math.round(consoCount*tick*100)/100;
+  const label=consoCount+' conso'+(consoCount>1?'s':'')+' (×'+consoCount+')';
+  addTx(currentMemberId,'conso',label,amount);
+  consoCount=0;
+  updateConsoRecap();
+  refreshDash();
+  resetTimer();
+  toast('-'+amount.toFixed(2)+' € décompté','ok');
+}
+
+function resetTimer(){
+  stopTimer();timerLeft=AUTO_LOGOUT;updateTimerBar();
+  timerInterval=setInterval(()=>{timerLeft--;updateTimerBar();if(timerLeft<=0){stopTimer();doLogout()}},1000);
+}
+function stopTimer(){clearInterval(timerInterval);timerInterval=null}
+function updateTimerBar(){
+  document.getElementById('timer-bar').style.width=(timerLeft/AUTO_LOGOUT*100)+'%';
+  document.getElementById('timer-sec').textContent=timerLeft;
+}
+function doLogout(){stopTimer();consoCount=0;updateConsoRecap();goHome()}
+
+const dashEl=document.getElementById('s-dash');
+dashEl.addEventListener('touchstart',()=>{if(timerInterval)resetTimer()});
+dashEl.addEventListener('click',()=>{if(timerInterval)resetTimer()});
+
+// ADMIN PIN
+let apinBuf='';
+function openAdminPin(){apinBuf='';updDots('a','',false);showScreen('s-admin-pin')}
+function apk(n){if(apinBuf.length>=4)return;apinBuf+=n;updDots('a',apinBuf,false);if(apinBuf.length===4)checkAdminPin()}
+function apkDel(){apinBuf=apinBuf.slice(0,-1);updDots('a',apinBuf,false)}
+function checkAdminPin(){
+  if(apinBuf===ADMIN_PIN){renderAdmin();showScreen('s-admin')}
+  else{updDots('a','',true);apinBuf='';toast('Code admin incorrect','ko');setTimeout(()=>updDots('a','',false),600)}
+}
+
+// ADMIN
+let selIds=new Set();
+
+function renderAdmin(){
+  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();
+  const tick=getTick();
+  const el=document.getElementById('tick-current');
+  if(el)el.textContent=tick.toFixed(2)+' €';
+  const inp=document.getElementById('tick-value');
+  if(inp)inp.value=tick.toFixed(2);
+  // Alerte export
+  const alertEl=document.getElementById('export-alert');
+  if(alertEl){
+    const lastExport=ls('bar2_last_export',null);
+    const now=new Date();
+    let showAlert=false;
+    let alertMsg='Aucun export effectué — sauvegarde recommandée';
+    if(!lastExport){
+      showAlert=true;
+    } else {
+      const daysSince=Math.floor((now-new Date(lastExport))/(1000*60*60*24));
+      if(daysSince>=7){
+        showAlert=true;
+        alertMsg=`Dernier export il y a ${daysSince} jours — sauvegarde recommandée`;
+      }
+    }
+    alertEl.style.display=showAlert?'flex':'none';
+    const msgEl=document.getElementById('export-alert-msg');
+    if(msgEl)msgEl.textContent=alertMsg;
+  }
+}
+
+function saveTick(){
+  const val=parseFloat(document.getElementById('tick-value').value);
+  if(!val||val<=0)return toast('Valeur invalide','ko');
+  ss('bar2_tick',val);
+  toast('Prix mis à jour : '+val.toFixed(2)+' € / croix','ok');
+  renderAdmin();
+}
+
+function renderRecap(){
+  const sorted=[...members].sort((a,b)=>(a.balance||0)-(b.balance||0));
+  if(!sorted.length){document.getElementById('admin-recap').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
+  document.getElementById('admin-recap').innerHTML=sorted.map(m=>{
+    const b=m.balance||0;
+    const cls=b>0?'pos':b<0?'neg':'zero';
+    const sel=selIds.has(m.id);
+    return`<div class="recap-row" style="cursor:pointer">
+      <div class="recap-check ${sel?'sel':''}" onclick="toggleSel('${m.id}')">${sel?'✓':''}</div>
+      <div class="recap-name" onclick="openAdminMember('${m.id}')" style="flex:1">${m.name}</div>
+      <div class="recap-bal ${cls}" onclick="openAdminMember('${m.id}')">${b>=0?'+':''}${b.toFixed(2)} €</div>
+      <div style="font-size:16px;color:var(--muted);padding-left:6px" onclick="openAdminMember('${m.id}')">›</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleSel(id){selIds.has(id)?selIds.delete(id):selIds.add(id);renderRecap();updateBulkCount()}
+function updateBulkCount(){document.getElementById('bulk-sel-count').textContent=`${selIds.size} membre(s) sélectionné(s)`}
+function setBulk(v){document.getElementById('bulk-amount').value=v}
+
+function bulkAction(dir){
+  const amount=parseFloat(document.getElementById('bulk-amount').value);
+  if(!amount||amount<=0)return toast('Montant invalide','ko');
+  if(!selIds.size)return toast('Aucun membre sélectionné','ko');
+  const comment=document.getElementById('bulk-comment').value.trim();
+  const baseLabel=(dir==='add'?'Crédit':'Débit')+' collectif';
+  const label=comment?baseLabel+' — '+comment:baseLabel;
+  selIds.forEach(id=>addTx(id,dir==='add'?'credit':'debit',label,amount));
+  toast(`${dir==='add'?'+':'-'}${amount.toFixed(2)} € × ${selIds.size} membres`,'ok');
+  document.getElementById('bulk-comment').value='';
+  document.getElementById('bulk-amount').value='';
+  selIds.clear();renderAdmin();
+}
+
+function renderAdminMembers(){
+  if(!members.length){document.getElementById('admin-members').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
+  document.getElementById('admin-members').innerHTML=members.map(m=>{
+    const pinStatus=m.pin
+      ?`<span style="font-family:var(--mono);font-size:10px;color:var(--green)">●PIN</span>`
+      :`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">○ sans PIN</span>`;
+    return`<div class="recap-row">
+      <div class="recap-name">${m.name} ${pinStatus}</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+        ${m.pin?`<button class="btn btn-ghost btn-sm" style="border-color:var(--red-d);color:var(--red)" onclick="resetMemberPin('${m.id}')">↺ PIN</button>`:''}
+        <button class="btn btn-ghost btn-sm" onclick="openEditMember('${m.id}')">Modifier</button>
+        <button class="btn btn-red btn-sm" onclick="deleteMember('${m.id}')">Suppr.</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Map globale pour les callbacks d'annulation
+const cancelCallbacks={};
+
+function openAdminMember(id){
+  const m=getM(id);if(!m)return;
+  const b=m.balance||0;
+  const balCls=b>0?'var(--green)':b<0?'var(--red)':'var(--muted)';
+  const typeLabel={conso:'Consommation',recharge:'Recharge',credit:'Crédit collectif',debit:'Débit collectif'};
+  const typeColor={conso:'var(--red)',recharge:'var(--green)',credit:'var(--amber)',debit:'var(--muted)'};
+  const hist=m.history||[];
+
+  const histHTML=hist.length?hist.map((h,i)=>{
+    const isPos=h.type==='recharge'||h.type==='credit';
+    const d=new Date(h.date);
+    const ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    const cbKey='cb_'+id+'_'+i;
+    cancelCallbacks[cbKey]={memberId:id, index:i};
+    return`<div id="row_${cbKey}" style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div style="width:8px;height:8px;border-radius:50%;background:${typeColor[h.type]||'var(--muted)'};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.label}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${typeLabel[h.type]||h.type}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${isPos?'var(--green)':'var(--red)'};white-space:nowrap">${isPos?'+':'-'}${h.amount.toFixed(2)} €</div>
+      <button onclick="askCancel('${cbKey}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;font-family:var(--mono);padding:4px 8px;cursor:pointer;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('')
+  :`<div style="color:var(--muted);font-size:13px;text-align:center;padding:16px">Aucune transaction</div>`;
+
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">${m.name}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;background:var(--s2);border-radius:var(--r);padding:14px 16px">
+      <div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Solde actuel</div>
+        <div style="font-family:var(--display);font-size:28px;font-weight:800;color:${balCls}">${b>=0?'+':''}${b.toFixed(2)} €</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
+        <button class="btn btn-green btn-sm" onclick="closeSheet();openRecharge('${id}')">+ Recharger</button>
+        ${m.pin?`<button class="btn btn-ghost btn-sm" style="border-color:var(--red-d);color:var(--red)" onclick="resetMemberPin('${id}')">↺ PIN</button>`:''}
+      </div>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Historique (${hist.length} opérations)</div>
+    <div id="admin-member-hist">${histHTML}</div>`;
+  openSheet();
+}
+
+function askCancel(cbKey){
+  // Supprime toute confirmation précédente ouverte
+  document.querySelectorAll('.confirm-bar').forEach(el=>el.remove());
+  const row=document.getElementById('row_'+cbKey);
+  if(!row)return;
+  const bar=document.createElement('div');
+  bar.className='confirm-bar';
+  bar.style.cssText='background:var(--red-d);border:1px solid var(--red);border-radius:6px;padding:8px 12px;margin-bottom:4px;font-family:var(--mono);font-size:11px;color:var(--red);display:flex;align-items:center;justify-content:space-between;gap:8px';
+  bar.innerHTML=`<span>Confirmer la suppression ?</span><button onclick="doCancel('${cbKey}')" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:5px 12px;font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:500">Oui, supprimer</button>`;
+  row.after(bar);
+  setTimeout(()=>{if(bar.parentNode)bar.remove();},5000);
+}
+
+function doCancel(cbKey){
+  const cb=cancelCallbacks[cbKey];if(!cb)return;
+  const m=getM(cb.memberId);if(!m||!m.history)return;
+  const h=m.history[cb.index];if(!h)return;
+  const isPos=h.type==='recharge'||h.type==='credit';
+  const sign=isPos?-1:1;
+  m.balance=Math.round(((m.balance||0)+sign*h.amount)*100)/100;
+  m.history.splice(cb.index,1);
+  saveM();
+  toast('Opération annulée','ok');
+  renderAdmin();
+  openAdminMember(cb.memberId);
+}
+
+function cancelTx(){} // conservé pour compatibilité
+
+function openRecharge(id){
+  const m=getM(id);const b=m.balance||0;
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Recharger — ${m.name}</div>
+    <div style="font-family:var(--mono);font-size:13px;color:${b>=0?'var(--green)':'var(--red)'};margin-bottom:16px">Solde actuel : ${b>=0?'+':''}${b.toFixed(2)} €</div>
+    <div class="field">
+      <label>Montant reçu (€)</label>
+      <input id="r-amount" type="number" step="0.5" min="0.5" placeholder="0.00">
+      <div class="quick-row">
+        ${[5,10,20,50].map(v=>`<div class="q-btn" onclick="document.getElementById('r-amount').value=${v}">${v} €</div>`).join('')}
+      </div>
+    </div>
+    <button class="btn btn-amber" onclick="saveRecharge('${id}')">VALIDER RECHARGE</button>`;
+  openSheet();
+}
+
+function saveRecharge(id){
+  const amount=parseFloat(document.getElementById('r-amount').value);
+  if(!amount||amount<=0)return toast('Montant invalide','ko');
+  addTx(id,'recharge','Recharge (virement)',amount);
+  toast('+'+amount.toFixed(2)+' € crédité','ok');
+  closeSheet();renderAdmin();
+}
+
+function openAddMember(){
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Nouveau membre</div>
+    <div class="field"><label>Prénom / Nom</label><input id="nm-name" type="text" placeholder="Ex : Jean Dupont"></div>
+    <div class="field"><label>PIN à 4 chiffres</label><input id="nm-pin" type="password" maxlength="4" inputmode="numeric" placeholder="0000"></div>
+    <div class="field"><label>Solde initial (€)</label><input id="nm-bal" type="number" step="0.5" value="0"></div>
+    <button class="btn btn-amber" onclick="saveMember()">CRÉER</button>`;
+  openSheet();setTimeout(()=>document.getElementById('nm-name').focus(),100);
+}
+
+function saveMember(){
+  const name=document.getElementById('nm-name').value.trim();
+  const pin=document.getElementById('nm-pin').value.trim();
+  const bal=parseFloat(document.getElementById('nm-bal').value)||0;
+  if(!name)return toast('Nom requis','ko');
+  if(pin&&!/^\d{4}$/.test(pin))return toast('PIN = 4 chiffres','ko');
+  members.push({id:'m'+Date.now(),name,pin:pin||null,balance:bal,history:[]});
+  saveM();toast(name+' ajouté','ok');closeSheet();renderAdmin();
+}
+
+function openEditMember(id){
+  const m=getM(id);
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Modifier — ${m.name}</div>
+    <div class="field"><label>Nom</label><input id="em-name" type="text" value="${m.name}"></div>
+    <div class="field"><label>Nouveau PIN (vide = inchangé)</label><input id="em-pin" type="password" maxlength="4" inputmode="numeric" placeholder="••••"></div>
+    <button class="btn btn-amber" onclick="saveEditMember('${id}')">ENREGISTRER</button>`;
+  openSheet();
+}
+
+function saveEditMember(id){
+  const m=getM(id);
+  const name=document.getElementById('em-name').value.trim();
+  const pin=document.getElementById('em-pin').value.trim();
+  if(!name)return toast('Nom requis','ko');
+  if(pin&&!/^\d{4}$/.test(pin))return toast('PIN invalide','ko');
+  m.name=name;if(pin)m.pin=pin;
+  saveM();toast('Enregistré','ok');closeSheet();renderAdmin();
+}
+
+function resetMemberPin(id){
+  const m=getM(id);
+  m.pin=null;saveM();
+  toast(`PIN de ${m.name} supprimé`,'ok');
+  renderAdmin();
+  openAdminMember(id);
+}
+
+function deleteMember(id){
+  const m=getM(id);
+  members=members.filter(x=>x.id!==id);saveM();
+  toast('Membre supprimé','');renderAdmin();
+}
+
+// ════════════════════════════════════
+// EXPORT EXCEL
+// ════════════════════════════════════
+function openExportSheet(){
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Export Excel</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.7">
+      Le fichier contiendra :<br>
+      • <b style="color:var(--text)">Récap</b> — solde + totaux débit/crédit par membre<br>
+      • <b style="color:var(--text)">Historique</b> — toutes les transactions sur la période
+    </div>
+    <div class="field">
+      <label>Date de départ (optionnelle)</label>
+      <input id="exp-from" type="date" value="" max="${today}">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Laisser vide = tout l'historique</div>
+    </div>
+    <button class="btn btn-amber" onclick="exportExcel()">↓ EXPORTER</button>`;
+  openSheet();
+}
+
+function exportExcel(){
+  if(typeof XLSX==='undefined')return toast('SheetJS non chargé','ko');
+  const now=new Date();
+  const fromVal=document.getElementById('exp-from').value;
+  const fromDate=fromVal?new Date(fromVal):null;
+
+  const dateStr=d=>new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const periodeLabel=fromDate?`Du ${dateStr(fromDate)} au ${dateStr(now)}`:`Tout l'historique (au ${dateStr(now)})`;
+  const filterHist=hist=>fromDate?hist.filter(h=>new Date(h.date)>=fromDate):hist;
+  const typeLabel={conso:'Consommation',recharge:'Recharge',credit:'Crédit collectif',debit:'Débit collectif'};
+
+  const wb=XLSX.utils.book_new();
+
+  // ══ FEUILLE 1 : RÉCAP ENRICHI ══
+  const recapData=[
+    ['Bar des Vampires — Récapitulatif comptable'],
+    ['Période : '+periodeLabel],
+    ['Généré le : '+dateStr(now)],
+    [],
+    ['Membre','Solde actuel (€)','Total débité (€)','Total crédité (€)','Nb consos','Opérations collectives','Détail collectif']
+  ];
+
+  members.forEach(m=>{
+    const filtered=filterHist(m.history||[]);
+    const consos=filtered.filter(h=>h.type==='conso');
+    const debits=filtered.filter(h=>h.type==='debit');
+    const credits=filtered.filter(h=>h.type==='recharge'||h.type==='credit');
+    const collectifs=filtered.filter(h=>h.type==='debit'||h.type==='credit');
+
+    const totalDebit=consos.reduce((s,h)=>s+h.amount,0)+debits.reduce((s,h)=>s+h.amount,0);
+    const totalCredit=credits.reduce((s,h)=>s+h.amount,0);
+    const nbConsos=consos.reduce((s,h)=>{
+      const m=h.label.match(/×(\d+)/);return s+(m?parseInt(m[1]):1);
+    },0);
+
+    // Détail collectif : une ligne par opération avec commentaire
+    const detailCollectif=collectifs.map(h=>{
+      const sign=h.type==='credit'?'+':'-';
+      const d=new Date(h.date);
+      const ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      return `${ds} ${sign}${h.amount.toFixed(2)}€ — ${h.label}`;
+    }).join('\n');
+
+    recapData.push([
+      m.name,
+      m.balance||0,
+      -totalDebit,
+      totalCredit,
+      nbConsos,
+      collectifs.length,
+      detailCollectif||'—'
+    ]);
+  });
+
+  // Ligne totaux
+  recapData.push([]);
+  const totBal=members.reduce((s,m)=>s+(m.balance||0),0);
+  const totDeb=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='conso'||h.type==='debit').reduce((a,h)=>a+h.amount,0),0);
+  const totCred=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='recharge'||h.type==='credit').reduce((a,h)=>a+h.amount,0),0);
+  const totConsos=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='conso').reduce((a,h)=>{
+    const match=h.label.match(/×(\d+)/);return a+(match?parseInt(match[1]):1);
+  },0),0);
+  recapData.push(['TOTAL', totBal, -totDeb, totCred, totConsos, '', '']);
+
+  const wsRecap=XLSX.utils.aoa_to_sheet(recapData);
+  wsRecap['!cols']=[{wch:20},{wch:16},{wch:16},{wch:16},{wch:10},{wch:14},{wch:60}];
+  wsRecap['!merges']=[
+    {s:{r:0,c:0},e:{r:0,c:6}},
+    {s:{r:1,c:0},e:{r:1,c:6}},
+    {s:{r:2,c:0},e:{r:2,c:6}}
+  ];
+  // Wrap text sur la colonne détail collectif
+  for(let i=5;i<5+members.length;i++){
+    const cell=wsRecap[XLSX.utils.encode_cell({r:i,c:6})];
+    if(cell) cell.s={alignment:{wrapText:true,vertical:'top'}};
+  }
+  XLSX.utils.book_append_sheet(wb, wsRecap, 'Récap');
+
+  // ══ FEUILLE 2 : HISTORIQUE GLOBAL ══
+  const histData=[
+    ['Bar des Vampires — Historique transactions'],
+    ['Période : '+periodeLabel],
+    [],
+    ['Date','Heure','Membre','Type','Libellé','Montant (€)','Sens']
+  ];
+  const allTx=[];
+  members.forEach(m=>{
+    filterHist(m.history||[]).forEach(h=>{
+      const isPos=h.type==='recharge'||h.type==='credit';
+      const d=new Date(h.date);
+      allTx.push([
+        d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
+        d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+        m.name,
+        typeLabel[h.type]||h.type,
+        h.label,
+        isPos?h.amount:-h.amount,
+        isPos?'Crédit':'Débit'
+      ]);
+    });
+  });
+  allTx.sort((a,b)=>{
+    const da=a[0].split('/').reverse().join('-')+'T'+a[1];
+    const db=b[0].split('/').reverse().join('-')+'T'+b[1];
+    return new Date(db)-new Date(da);
+  });
+  allTx.forEach(r=>histData.push(r));
+  const wsHist=XLSX.utils.aoa_to_sheet(histData);
+  wsHist['!cols']=[{wch:14},{wch:8},{wch:20},{wch:18},{wch:35},{wch:14},{wch:10}];
+  wsHist['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
+  XLSX.utils.book_append_sheet(wb, wsHist, 'Historique');
+
+  // ── NOM FICHIER ──
+  const slug=d=>dateStr(d).replace(/\//g,'-');
+  const filename=fromDate
+    ?`bar_vampires_${slug(fromDate)}_au_${slug(now)}.xlsx`
+    :`bar_vampires_complet_${slug(now)}.xlsx`;
+
+  XLSX.writeFile(wb,filename);
+  ss('bar2_last_export', new Date().toISOString());
+
+  // Purge totale des historiques — soldes conservés
+  members.forEach(m=>{ m.history=[]; });
+  saveM();
+
+  toast('Export téléchargé — historiques effacés','ok');
+  closeSheet();
+  renderAdmin();
+}
+
+function openSheet(){
+  document.getElementById('overlay').classList.add('open');
+}
+function closeSheet(){document.getElementById('overlay').classList.remove('open')}
+function overlayClick(e){if(e.target===document.getElementById('overlay'))closeSheet()}
+
+let toastTm;
+function toast(msg,type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.className='toast '+(type==='ok'?'ok':type==='ko'?'ko':'');
+  t.classList.add('show');clearTimeout(toastTm);toastTm=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// Version du PWA — incrémenter à chaque mise à jour
+const APP_VERSION = '1.0.0';
+
+if('serviceWorker' in navigator){
+  const sw=`
+    const CACHE='bar-vampires-v1.0.0';
+    const FILES=['./','./index.html','./manifest.json','./icon-512.png'];
+    self.addEventListener('install',e=>{
+      e.waitUntil(caches.open(CACHE).then(c=>c.addAll(FILES).catch(()=>c.add('./'))));
+      self.skipWaiting();
+    });
+    self.addEventListener('activate',e=>{
+      e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))));
+      self.clients.claim();
+    });
+    self.addEventListener('fetch',e=>{
+      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)));
+    });
+  `;
+  const blob=new Blob([sw],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).then(reg=>{
+    // Check update au chargement
+    reg.addEventListener('updatefound',()=>{
+      const newWorker=reg.installing;
+      newWorker.addEventListener('statechange',()=>{
+        if(newWorker.state==='installed'&&navigator.serviceWorker.controller){
+          showUpdateBanner();
+        }
+      });
+    });
+    // Vérif update au chargement uniquement
+    reg.update();
+  }).catch(()=>{});
+
+  // Détection mise à jour via numéro de version sur GitHub
+  async function checkVersion(){
+    try{
+      const r=await fetch('./index.html?_='+Date.now(),{cache:'no-store'});
+      const txt=await r.text();
+      const match=txt.match(/APP_VERSION\s*=\s*'([^']+)'/);
+      if(match&&match[1]&&match[1]!==APP_VERSION){
+        showUpdateBanner(match[1]);
+      }
+    }catch(e){}
+  }
+  setTimeout(checkVersion,3000);
+}
+
+function showUpdateBanner(newVersion=''){
+  if(document.getElementById('update-banner'))return;
+  const b=document.createElement('div');
+  b.id='update-banner';
+  b.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#1a3a00;border-bottom:2px solid #4ade80;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-family:IBM Plex Mono,monospace;';
+  b.innerHTML=`<span style="font-size:13px;color:#4ade80">🔄 Nouvelle version${newVersion?' '+newVersion:''} disponible</span>
+    <button onclick="window.location.reload(true)" style="background:#4ade80;color:#000;border:none;border-radius:6px;padding:6px 14px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500">Mettre à jour</button>`;
+  document.body.prepend(b);
+}
+
+renderHome();
+</script>
+</body>
+</html>
