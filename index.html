@@ -287,7 +287,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     <div class="card">
       <div class="card-head">
         <div class="card-title">Récap comptes</div>
-        <button class="btn btn-ghost btn-sm" onclick="openExportSheet()">↓ Export Excel</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div onclick="toggleSelectAll()" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <div id="select-all-check" class="recap-check" style="width:20px;height:20px"></div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px">TOUS</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" onclick="openExportSheet()">↓ Export Excel</button>
+        </div>
       </div>
       <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
         <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
@@ -345,6 +351,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Valeur actuelle : <span id="tick-current"></span></div>
         </div>
         <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
+        <div style="height:1px;background:var(--border);margin:16px 0"></div>
+        <div class="section-label" style="margin-bottom:10px">Sauvegarde & restauration</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Export complet : membres, soldes, historique, paramètres.</div>
+        <div class="row" style="gap:8px">
+          <button class="btn btn-ghost flex1" style="padding:12px;font-size:11px;letter-spacing:1px" onclick="exportConfig()">↓ EXPORTER CONFIG</button>
+          <button class="btn btn-ghost flex1" style="padding:12px;font-size:11px;letter-spacing:1px;border-color:var(--amber);color:var(--amber)" onclick="document.getElementById('import-config-input').click()">↑ IMPORTER CONFIG</button>
+        </div>
+        <input type="file" id="import-config-input" accept=".json" style="display:none" onchange="importConfig(event)">
       </div>
     </div>
 
@@ -842,7 +856,13 @@ function renderRecap(){
     debtTot.textContent=(caisse>=0?'+':'')+caisse.toFixed(2)+' €';
     debtTot.style.color=caisse>0?'var(--green)':caisse<0?'var(--red)':'var(--muted)';
   }
-  if(!sorted.length){document.getElementById('admin-recap').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
+  // Mettre à jour la case "TOUS"
+  const allChk=document.getElementById('select-all-check');
+  if(allChk){
+    const allSel=members.length>0&&selIds.size===members.length;
+    allChk.className='recap-check'+(allSel?' sel':'');
+    allChk.textContent=allSel?'✓':'';
+  }
   document.getElementById('admin-recap').innerHTML=sorted.map(m=>{
     const b=m.balance||0;
     const cls=b>0?'pos':b<0?'neg':'zero';
@@ -855,6 +875,21 @@ function renderRecap(){
       <div style="font-size:16px;color:var(--muted);padding-left:2px" onclick="openAdminMember('${m.id}')">›</div>
     </div>`;
   }).join('');
+}
+
+function toggleSelectAll(){
+  const allSelected=selIds.size===members.length&&members.length>0;
+  if(allSelected){
+    selIds.clear();
+  } else {
+    members.forEach(m=>selIds.add(m.id));
+  }
+  const chk=document.getElementById('select-all-check');
+  if(chk){
+    chk.className='recap-check'+(selIds.size===members.length&&members.length>0?' sel':'');
+    chk.textContent=selIds.size===members.length&&members.length>0?'✓':'';
+  }
+  renderRecap();updateBulkCount();
 }
 
 function toggleSel(id){selIds.has(id)?selIds.delete(id):selIds.add(id);renderRecap();updateBulkCount()}
@@ -1342,6 +1377,68 @@ function exportExcel(){
   renderAdmin();
 }
 
+function exportConfig(){
+  const config={
+    version: APP_VERSION,
+    date: new Date().toISOString(),
+    tick: getTick(),
+    members: members
+  };
+  const blob=new Blob([JSON.stringify(config, null, 2)], {type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const slug=new Date().toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}).replace(/\//g,'-');
+  a.href=url; a.download=`bar_vampires_config_${slug}.json`;
+  a.click(); URL.revokeObjectURL(url);
+  toast('Config exportée','ok');
+}
+
+function importConfig(event){
+  const file=event.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const config=JSON.parse(e.target.result);
+      if(!config.members||!Array.isArray(config.members))throw new Error('Format invalide');
+      // Confirmation avant import
+      document.getElementById('sheet-body').innerHTML=`
+        <div class="sheet-title">Importer une config</div>
+        <div style="background:var(--s2);border-radius:var(--r);padding:14px 16px;margin-bottom:16px">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:6px">Fichier détecté</div>
+          <div style="font-size:14px;color:var(--text)">${config.members.length} membres</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:4px">Exporté le ${new Date(config.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <div style="background:var(--red-d);border:1px solid var(--red);border-radius:var(--r-sm);padding:12px;margin-bottom:16px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.6">
+          ⚠ Les données actuelles seront remplacées par celles du fichier importé.
+        </div>
+        <button class="btn btn-amber" style="width:100%;padding:14px;margin-bottom:8px" onclick="confirmImportConfig()">CONFIRMER L'IMPORT</button>
+        <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="closeSheet()">Annuler</button>`;
+      // Stocker temporairement la config à importer
+      window._pendingConfig=config;
+      openSheet();
+    } catch(err){
+      toast('Fichier invalide','ko');
+    }
+  };
+  reader.readAsText(file);
+  // Reset input pour permettre de re-importer le même fichier
+  event.target.value='';
+}
+
+function confirmImportConfig(){
+  const config=window._pendingConfig;
+  if(!config)return;
+  members=config.members;
+  saveM();
+  if(config.tick) ss('bar2_tick', config.tick);
+  window._pendingConfig=null;
+  closeSheet();
+  renderAdmin();
+  renderHome();
+  toast(`${members.length} membres importés avec succès`,'ok');
+}
+
 function openCentralClear(){
   document.getElementById('sheet-body').innerHTML=`
     <div class="sheet-title" style="color:var(--red)">⚠ CENTRAL CLEAR</div>
@@ -1414,7 +1511,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.4.0';
+const APP_VERSION = '1.5.0';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
