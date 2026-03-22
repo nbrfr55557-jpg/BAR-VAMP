@@ -131,6 +131,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 ::-webkit-scrollbar{width:3px}
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:var(--border)}
+@keyframes pulse-red{
+  0%,100%{box-shadow:0 0 0 0 rgba(231,76,60,.4)}
+  50%{box-shadow:0 0 0 8px rgba(231,76,60,0)}
+}
 </style>
 </head>
 <body>
@@ -317,11 +321,16 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       </div>
     </div>
 
+
     <div class="card">
-      <div class="card-head"><div class="card-title">Membres</div>
-        <button class="btn btn-ghost btn-sm" onclick="openAddMember()">+ Ajouter</button>
+      <div class="card-head" onclick="toggleMembersCard()" style="cursor:pointer;user-select:none">
+        <div class="card-title">Membres</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAddMember()">+ Ajouter</button>
+          <span id="members-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+        </div>
       </div>
-      <div class="card-body" id="admin-members"></div>
+      <div id="admin-members" class="card-body" style="display:none"></div>
     </div>
 
     <div class="card">
@@ -337,6 +346,33 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
         </div>
         <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
       </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Historique global</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
+      </div>
+      <div class="card-body" id="admin-global-hist"></div>
+    </div>
+
+    <!-- CENTRAL CLEAR -->
+    <div style="padding:8px 0 24px">
+      <button onclick="openCentralClear()" style="
+        width:100%;
+        background:var(--red-d);
+        border:2px solid var(--red);
+        border-radius:var(--r);
+        padding:18px;
+        font-family:var(--mono);
+        font-size:14px;
+        font-weight:500;
+        letter-spacing:3px;
+        color:var(--red);
+        cursor:pointer;
+        transition:all .2s;
+        text-transform:uppercase;
+        animation: pulse-red 2s infinite;
+      ">⚠ CENTRAL CLEAR ⚠</button>
     </div>
 
   </div>
@@ -745,8 +781,16 @@ function checkAdminPin(){
 // ADMIN
 let selIds=new Set();
 
+function toggleMembersCard(){
+  const body=document.getElementById('admin-members');
+  const chevron=document.getElementById('members-chevron');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  chevron.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
 function renderAdmin(){
-  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();
+  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();renderAdminGlobalHist();
   const vEl=document.getElementById('admin-version');
   if(vEl)vEl.textContent=APP_VERSION;
   const vEl2=document.getElementById('logo-version-admin');
@@ -807,7 +851,8 @@ function renderRecap(){
       <div class="recap-check ${sel?'sel':''}" onclick="toggleSel('${m.id}')">${sel?'✓':''}</div>
       <div class="recap-name" onclick="openAdminMember('${m.id}')" style="flex:1">${m.name}</div>
       <div class="recap-bal ${cls}" onclick="openAdminMember('${m.id}')">${b>=0?'+':''}${b.toFixed(2)} €</div>
-      <div style="font-size:16px;color:var(--muted);padding-left:6px" onclick="openAdminMember('${m.id}')">›</div>
+      <button class="btn btn-ghost btn-sm" onclick="openInitMember('${m.id}')" style="border-color:var(--amber-dim);color:var(--amber);font-size:10px;padding:4px 8px!important">INIT</button>
+      <div style="font-size:16px;color:var(--muted);padding-left:2px" onclick="openAdminMember('${m.id}')">›</div>
     </div>`;
   }).join('');
 }
@@ -917,6 +962,59 @@ function openAdminMember(id){
   openSheet();
 }
 
+function renderAdminGlobalHist(){
+  const typeLabel={conso:'Conso',recharge:'Recharge',credit:'Crédit coll.',debit:'Débit coll.'};
+  const typeColor={conso:'var(--red)',recharge:'var(--green)',credit:'var(--amber)',debit:'var(--muted)'};
+  // Collecter toutes les transactions avec référence membre
+  const allTx=[];
+  members.forEach(m=>{
+    (m.history||[]).forEach((h,i)=>{
+      allTx.push({...h, memberName:m.name, memberId:m.id, idx:i});
+    });
+  });
+  // Tri chronologique décroissant
+  allTx.sort((a,b)=>new Date(b.date)-new Date(a.date));
+
+  const el=document.getElementById('admin-global-hist');
+  const countEl=document.getElementById('admin-hist-count');
+  if(countEl) countEl.textContent=allTx.length+' opération'+(allTx.length>1?'s':'');
+
+  if(!allTx.length){
+    el.innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucune opération</span></div>`;
+    return;
+  }
+
+  // Stocker les clés pour suppression
+  allTx.forEach((tx,i)=>{ cancelCallbacks['gh_'+i]={memberId:tx.memberId, index:tx.idx}; });
+
+  el.innerHTML=allTx.map((tx,i)=>{
+    const isPos=tx.type==='recharge'||tx.type==='credit';
+    const d=new Date(tx.date);
+    const ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'})+' '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'});
+    return`<div id="ghrow_${i}" class="recap-row" style="gap:8px;flex-wrap:nowrap">
+      <div style="width:8px;height:8px;border-radius:50%;background:${typeColor[tx.type]||'var(--muted)'};flex-shrink:0"></div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.memberName} — ${tx.label}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${typeLabel[tx.type]||tx.type}</div>
+      </div>
+      <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${isPos?'var(--green)':'var(--red)'};white-space:nowrap;flex-shrink:0">${isPos?'+':'-'}${tx.amount.toFixed(2)} €</div>
+      <button onclick="askCancelGh(${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;font-family:var(--mono);padding:4px 8px;cursor:pointer;flex-shrink:0">✕</button>
+    </div>`;
+  }).join('');
+}
+
+function askCancelGh(i){
+  document.querySelectorAll('.confirm-bar').forEach(el=>el.remove());
+  const row=document.getElementById('ghrow_'+i);
+  if(!row)return;
+  const bar=document.createElement('div');
+  bar.className='confirm-bar';
+  bar.style.cssText='background:var(--red-d);border:1px solid var(--red);border-radius:6px;padding:8px 12px;margin:4px 16px;font-family:var(--mono);font-size:11px;color:var(--red);display:flex;align-items:center;justify-content:space-between;gap:8px';
+  bar.innerHTML=`<span>Confirmer la suppression ?</span><button onclick="doCancel('gh_${i}')" style="background:var(--red);color:#fff;border:none;border-radius:4px;padding:5px 12px;font-family:var(--mono);font-size:11px;cursor:pointer;font-weight:500">Oui</button>`;
+  row.after(bar);
+  setTimeout(()=>{if(bar.parentNode)bar.remove();},5000);
+}
+
 function askCancel(cbKey){
   // Supprime toute confirmation précédente ouverte
   document.querySelectorAll('.confirm-bar').forEach(el=>el.remove());
@@ -941,10 +1039,54 @@ function doCancel(cbKey){
   saveM();
   toast('Opération annulée','ok');
   renderAdmin();
-  openAdminMember(cb.memberId);
+  // Si on était dans la fiche membre, on la réouvre
+  if(cb.memberId && document.getElementById('sheet').closest('.overlay')?.classList.contains('open')){
+    openAdminMember(cb.memberId);
+  }
 }
 
 function cancelTx(){} // conservé pour compatibilité
+
+function openInitMember(id){
+  const m=getM(id);if(!m)return;
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">Initialiser — ${m.name}</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:20px;line-height:1.7">
+      Définit le solde de départ.<br>
+      <span style="color:var(--green)">Positif</span> = il a du crédit · <span style="color:var(--red)">Négatif</span> = il a une dette
+    </div>
+    <div class="field">
+      <label>Solde initial (€)</label>
+      <input id="init-amount" type="number" step="0.5" placeholder="ex : 10.00 ou -5.00" value="${m.balance||''}">
+    </div>
+    <div class="quick-row" style="margin-bottom:14px">
+      <div class="q-btn" style="color:var(--green)" onclick="document.getElementById('init-amount').value=5">+5</div>
+      <div class="q-btn" style="color:var(--green)" onclick="document.getElementById('init-amount').value=10">+10</div>
+      <div class="q-btn" style="color:var(--red)" onclick="document.getElementById('init-amount').value=-5">-5</div>
+      <div class="q-btn" style="color:var(--red)" onclick="document.getElementById('init-amount').value=-10">-10</div>
+    </div>
+    <button class="btn btn-amber" onclick="saveInitMember('${id}')">ENREGISTRER</button>`;
+  openSheet();
+  setTimeout(()=>document.getElementById('init-amount').focus(),100);
+}
+
+function saveInitMember(id){
+  const m=getM(id);if(!m)return;
+  const val=parseFloat(document.getElementById('init-amount').value);
+  if(isNaN(val))return toast('Valeur invalide','ko');
+  m.balance=Math.round(val*100)/100;
+  // Ajouter une transaction d'initialisation dans l'historique
+  if(!m.history)m.history=[];
+  m.history.unshift({id:Date.now(),date:new Date().toISOString(),type:'recharge',label:'Initialisation du compte',amount:Math.abs(val)});
+  // Si négatif, corriger le type
+  if(val<0){
+    m.history[0].type='debit';
+    m.history[0].label='Initialisation du compte (dette)';
+  }
+  saveM();
+  toast(`${m.name} initialisé à ${val>=0?'+':''}${val.toFixed(2)} €`,'ok');
+  closeSheet();renderAdmin();
+}
 
 function openRecharge(id){
   const m=getM(id);const b=m.balance||0;
@@ -1200,6 +1342,64 @@ function exportExcel(){
   renderAdmin();
 }
 
+function openCentralClear(){
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title" style="color:var(--red)">⚠ CENTRAL CLEAR</div>
+    <div style="background:var(--red-d);border:1px solid var(--red);border-radius:var(--r);padding:16px;margin-bottom:20px;font-size:14px;line-height:1.7;color:var(--text)">
+      Êtes-vous sûr de vouloir remettre à zéro les portefeuilles de tous les participants et vider l'historique des opérations ?<br><br>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--red)">⚠ Cette action est irréversible.</span>
+    </div>
+    <button class="btn btn-red" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="openCentralClearPin()">OUI, CONTINUER</button>
+    <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="closeSheet()">Annuler</button>`;
+  openSheet();
+}
+
+let ccPinBuf='';
+function openCentralClearPin(){
+  ccPinBuf='';
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title" style="color:var(--red)">Confirme ton code admin</div>
+    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:20px">Saisis le code admin pour valider le CENTRAL CLEAR.</div>
+    <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="cc-dots">
+      <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
+    </div>
+    <div class="pin-pad" style="max-width:280px;margin:0 auto">
+      <div class="pin-key" onclick="ccKey('1')">1</div><div class="pin-key" onclick="ccKey('2')">2</div><div class="pin-key" onclick="ccKey('3')">3</div>
+      <div class="pin-key" onclick="ccKey('4')">4</div><div class="pin-key" onclick="ccKey('5')">5</div><div class="pin-key" onclick="ccKey('6')">6</div>
+      <div class="pin-key" onclick="ccKey('7')">7</div><div class="pin-key" onclick="ccKey('8')">8</div><div class="pin-key" onclick="ccKey('9')">9</div>
+      <div class="pin-key empty-key"></div><div class="pin-key" onclick="ccKey('0')">0</div><div class="pin-key" onclick="ccDel()">⌫</div>
+    </div>`;
+}
+
+function ccKey(n){
+  if(ccPinBuf.length>=4)return;
+  ccPinBuf+=n;
+  const dots=document.getElementById('cc-dots').querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>d.className='pin-dot'+(i<ccPinBuf.length?' on':''));
+  if(ccPinBuf.length===4) ccCheckPin();
+}
+function ccDel(){
+  ccPinBuf=ccPinBuf.slice(0,-1);
+  const dots=document.getElementById('cc-dots').querySelectorAll('.pin-dot');
+  dots.forEach((d,i)=>d.className='pin-dot'+(i<ccPinBuf.length?' on':''));
+}
+function ccCheckPin(){
+  if(ccPinBuf!==ADMIN_PIN){
+    const dots=document.getElementById('cc-dots').querySelectorAll('.pin-dot');
+    dots.forEach(d=>d.className='pin-dot err');
+    ccPinBuf='';
+    toast('Code incorrect','ko');
+    setTimeout(()=>dots.forEach(d=>d.className='pin-dot'),600);
+    return;
+  }
+  // PIN correct → CENTRAL CLEAR
+  members.forEach(m=>{ m.balance=0; m.history=[]; });
+  saveM();
+  closeSheet();
+  renderAdmin();
+  toast('CENTRAL CLEAR effectué — tous les comptes remis à zéro','ok');
+}
+
 function openSheet(){
   document.getElementById('overlay').classList.add('open');
 }
@@ -1214,7 +1414,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
