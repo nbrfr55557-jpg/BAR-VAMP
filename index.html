@@ -74,7 +74,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .pin-key:active{transform:scale(.88);background:var(--amber);color:#000;border-color:var(--amber)}
 .pin-key.empty-key{pointer-events:none;background:transparent;border-color:transparent}
 /* DASH */
-.dash-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.dash-body{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:16px;-webkit-overflow-scrolling:touch}
 .balance-card{background:linear-gradient(135deg,var(--s2) 0%,var(--s1) 100%);border:1px solid var(--border);border-radius:var(--r);padding:24px;text-align:center;position:relative;overflow:hidden}
 .balance-card::before{content:'';position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:var(--amber);opacity:.04}
 .balance-label{font-family:var(--mono);font-size:11px;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
@@ -138,7 +138,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 <!-- HOME -->
 <div id="s-home" class="screen active">
   <div class="topbar">
-    <div class="logo">Bar des Vampires<sub>asso</sub></div>
+    <div class="logo">Bar des Vampires<sub id="logo-version"></sub></div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
       <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase">Caisse</div>
       <div id="bar-solde" style="font-family:var(--mono);font-size:15px;font-weight:500"></div>
@@ -178,8 +178,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 <!-- DASHBOARD MEMBRE -->
 <div id="s-dash" class="screen">
   <div class="topbar">
-    <div class="logo">Bar<sub>asso</sub></div>
-    <button class="btn btn-ghost" onclick="doLogout()">Déco</button>
+    <div class="logo" id="dash-topbar-name" style="font-size:20px"></div>
+    <button class="btn btn-red" style="padding:8px 16px;font-size:11px" onclick="doLogout()">DÉCONNEXION</button>
   </div>
   <div class="dash-body">
 
@@ -193,36 +193,27 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <button class="btn btn-ghost btn-sm" style="border-color:#7c5c00;color:#fbbf24;white-space:nowrap" onclick="openCreatePin()">Créer</button>
     </div>
 
-    <div class="balance-card">
+    <!-- Solde + récap fusionnés dans une seule carte stable -->
+    <div class="balance-card" style="overflow:visible">
       <div class="balance-label">Mon solde</div>
       <div class="balance-value" id="dash-balance">0,00 €</div>
       <div class="balance-sub" id="dash-name-sub"></div>
+      <!-- Compteur inline, toujours présent pour éviter tout décalage -->
+      <div id="conso-recap" style="visibility:hidden;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)"><span id="recap-count">0</span> conso<span id="recap-plural"></span></div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--amber)" id="recap-total">0,00 €</div>
+      </div>
     </div>
+
     <div>
       <div class="section-label" style="margin-bottom:10px">Consommer</div>
-
-      <!-- Bouton principal -->
       <div class="conso-btn" onclick="addConso()" style="width:100%;padding:28px 14px">
         <div class="conso-icon">✕</div>
         <div class="conso-label">1 conso</div>
-        <div class="conso-price">0,60 €</div>
-      </div>
-
-      <!-- Récap panier (caché si 0) -->
-      <div id="conso-recap" style="display:none;margin-top:12px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-          <div>
-            <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">À valider</div>
-            <div style="font-family:var(--display);font-size:28px;font-weight:800;color:var(--text)"><span id="recap-count">0</span> conso<span id="recap-plural"></span></div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-family:var(--mono);font-size:22px;font-weight:500;color:var(--amber)" id="recap-total">0,00 €</div>
-            <button onclick="resetConso()" style="background:none;border:none;color:var(--muted);font-family:var(--mono);font-size:11px;cursor:pointer;margin-top:4px">✕ annuler</button>
-          </div>
-        </div>
-        <button class="btn btn-amber" onclick="validerConso()">VALIDER</button>
+        <div class="conso-price" id="conso-tick-price">0,60 €</div>
       </div>
     </div>
+
     <div>
       <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
       <div class="logout-hint">Déconnexion auto dans <span id="timer-sec">15</span>s</div>
@@ -233,11 +224,18 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     </div>
 
     <!-- Modifier PIN (visible si PIN déjà défini) -->
-    <div id="change-pin-wrap" style="display:none;padding-bottom:8px">
+    <div id="change-pin-wrap" style="display:none;padding-bottom:80px">
       <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:11px;letter-spacing:1px" onclick="openChangePin()">🔑 Modifier mon code PIN</button>
     </div>
 
   </div>
+
+  <!-- Barre fixe ANNULER / VALIDER en bas -->
+  <div id="conso-action-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--s1);border-top:1px solid var(--border);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <button class="btn btn-red" style="padding:16px;font-size:15px;width:100%" onclick="resetConso()">✕ ANNULER</button>
+    <button class="btn btn-green" style="padding:16px;font-size:15px;width:100%" onclick="validerConso()">✓ VALIDER</button>
+  </div>
+
 </div>
 
 <!-- PIN ADMIN -->
@@ -267,7 +265,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 <!-- ADMIN -->
 <div id="s-admin" class="screen">
   <div class="topbar">
-    <div class="logo">Bar des Vampires<sub>admin</sub></div>
+    <div class="logo">Bar des Vampires<sub id="logo-version-admin"></sub></div>
     <button class="btn btn-ghost" onclick="goHome()">← Quitter</button>
   </div>
   <div class="admin-body">
@@ -286,6 +284,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="card-head">
         <div class="card-title">Récap comptes</div>
         <button class="btn btn-ghost btn-sm" onclick="openExportSheet()">↓ Export Excel</button>
+      </div>
+      <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
+        <div id="admin-debts-total" style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red)"></div>
       </div>
       <div class="card-body" id="admin-recap"></div>
     </div>
@@ -323,7 +325,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     </div>
 
     <div class="card">
-      <div class="card-head"><div class="card-title">Paramètres</div></div>
+      <div class="card-head">
+        <div class="card-title">Paramètres</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">v<span id="admin-version"></span></div>
+      </div>
       <div class="card-body" style="padding:14px 16px">
         <div class="field">
           <label>Prix d'une croix (€)</label>
@@ -351,7 +356,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 const ADMIN_PIN='6665'; // ← CHANGER AVANT DÉPLOIEMENT
 const DEFAULT_TICK=0.60;
 function getTick(){return parseFloat(ls('bar2_tick',DEFAULT_TICK))||DEFAULT_TICK;}
-const AUTO_LOGOUT=15;
+const AUTO_LOGOUT=10;
 
 function ls(k,d){try{const v=localStorage.getItem(k);return v!==null?JSON.parse(v):d}catch{return d}}
 function ss(k,v){localStorage.setItem(k,JSON.stringify(v))}
@@ -387,6 +392,8 @@ function getBarSolde(){
 }
 
 function renderHome(){
+  const vEl=document.getElementById('logo-version');
+  if(vEl)vEl.textContent='v'+APP_VERSION;
   const solde=getBarSolde();
   const barEl=document.getElementById('bar-solde');
   if(barEl){
@@ -435,7 +442,13 @@ function updDots(prefix,buf,err){
 // DASH
 let timerInterval=null,timerLeft=AUTO_LOGOUT;
 
-function openDash(id){currentMemberId=id;consoCount=0;updateConsoRecap();refreshDash();showScreen('s-dash');resetTimer()}
+function openDash(id){
+  currentMemberId=id;consoCount=0;updateConsoRecap();refreshDash();
+  // Prix de la croix sur le bouton
+  const tickEl=document.getElementById('conso-tick-price');
+  if(tickEl)tickEl.textContent=getTick().toFixed(2)+' €';
+  showScreen('s-dash');resetTimer();
+}
 
 function refreshDash(){
   const m=getM(currentMemberId);if(!m)return;
@@ -444,6 +457,8 @@ function refreshDash(){
   el.textContent=(b>=0?'+':'')+b.toFixed(2)+' €';
   el.className='balance-value '+(b>0?'pos':b<0?'neg':'zero');
   document.getElementById('dash-name-sub').textContent=m.name;
+  const topName=document.getElementById('dash-topbar-name');
+  if(topName)topName.textContent=m.name;
   // Bandeau PIN
   const banner=document.getElementById('pin-banner');
   const changeWrap=document.getElementById('change-pin-wrap');
@@ -663,7 +678,9 @@ function updateConsoRecap(){
   document.getElementById('recap-count').textContent=consoCount;
   document.getElementById('recap-plural').textContent=consoCount>1?'s':'';
   document.getElementById('recap-total').textContent=total.toFixed(2)+' €';
-  document.getElementById('conso-recap').style.display=consoCount>0?'block':'none';
+  const show=consoCount>0;
+  document.getElementById('conso-recap').style.visibility=show?'visible':'hidden';
+  document.getElementById('conso-action-bar').style.display=show?'grid':'none';
 }
 
 function resetConso(){
@@ -680,9 +697,14 @@ function validerConso(){
   addTx(currentMemberId,'conso',label,amount);
   consoCount=0;
   updateConsoRecap();
-  refreshDash();
-  resetTimer();
-  toast('-'+amount.toFixed(2)+' € décompté','ok');
+  // Flash vert sur le solde
+  const balEl=document.getElementById('dash-balance');
+  if(balEl){
+    balEl.style.transition='none';
+    balEl.style.color='var(--green)';
+  }
+  // Déconnexion immédiate après validation
+  doLogout();
 }
 
 function resetTimer(){
@@ -694,7 +716,17 @@ function updateTimerBar(){
   document.getElementById('timer-bar').style.width=(timerLeft/AUTO_LOGOUT*100)+'%';
   document.getElementById('timer-sec').textContent=timerLeft;
 }
-function doLogout(){stopTimer();consoCount=0;updateConsoRecap();goHome()}
+function doLogout(){
+  stopTimer();
+  // Valider automatiquement les consos en attente avant de quitter
+  if(consoCount>0 && currentMemberId){
+    const tick=getTick();
+    const amount=Math.round(consoCount*tick*100)/100;
+    const label=consoCount+' conso'+(consoCount>1?'s':'')+' (×'+consoCount+') — auto';
+    addTx(currentMemberId,'conso',label,amount);
+  }
+  consoCount=0;updateConsoRecap();goHome();
+}
 
 const dashEl=document.getElementById('s-dash');
 dashEl.addEventListener('touchstart',()=>{if(timerInterval)resetTimer()});
@@ -715,6 +747,10 @@ let selIds=new Set();
 
 function renderAdmin(){
   selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();
+  const vEl=document.getElementById('admin-version');
+  if(vEl)vEl.textContent=APP_VERSION;
+  const vEl2=document.getElementById('logo-version-admin');
+  if(vEl2)vEl2.textContent='v'+APP_VERSION;
   const tick=getTick();
   const el=document.getElementById('tick-current');
   if(el)el.textContent=tick.toFixed(2)+' €';
@@ -752,6 +788,16 @@ function saveTick(){
 
 function renderRecap(){
   const sorted=[...members].sort((a,b)=>(a.balance||0)-(b.balance||0));
+  // Total dettes
+  const totalDebts=members.reduce((s,m)=>m.balance<0?s+(m.balance||0):s,0);
+  const debtEl=document.getElementById('admin-debts-summary');
+  const debtTot=document.getElementById('admin-debts-total');
+  if(debtEl&&debtTot){
+    const caisse=Math.round(members.reduce((s,m)=>s+(m.balance||0),0)*100)/100;
+    debtEl.style.display='flex';
+    debtTot.textContent=(caisse>=0?'+':'')+caisse.toFixed(2)+' €';
+    debtTot.style.color=caisse>0?'var(--green)':caisse<0?'var(--red)':'var(--muted)';
+  }
   if(!sorted.length){document.getElementById('admin-recap').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
   document.getElementById('admin-recap').innerHTML=sorted.map(m=>{
     const b=m.balance||0;
@@ -1132,7 +1178,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.0.1';
+const APP_VERSION = '1.1.0';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
