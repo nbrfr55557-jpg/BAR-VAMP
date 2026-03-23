@@ -13,6 +13,7 @@
 <title>Bar des Vampires</title>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root {
   --bg:#0d0d0d;--s1:#161616;--s2:#1e1e1e;--s3:#272727;
@@ -296,11 +297,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="card-head" onclick="toggleMembersCard()" style="cursor:pointer;user-select:none">
         <div class="card-title">Membres</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();openAddMember()">+ Ajouter</button>
+          <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openAddMember()">+ Ajouter</button>
           <span id="members-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
         </div>
       </div>
       <div id="admin-members" class="card-body" style="display:none"></div>
+    </div>
+
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Historique global</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
+      </div>
+      <div class="card-body" id="admin-global-hist"></div>
+    </div>
+
+    <!-- TRÉSORERIE -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Trésorerie</div>
+        <button class="btn btn-ghost btn-sm" onclick="openTresorerie()">📊 Gérer</button>
+      </div>
+      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
     </div>
 
     <div class="card">
@@ -317,29 +335,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
         <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
         <div style="height:1px;background:var(--border);margin:16px 0"></div>
         <div class="section-label" style="margin-bottom:10px">Sauvegarde & restauration</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">Export complet : membres, soldes, historique, paramètres.</div>
-        <div class="row" style="gap:8px">
-          <button class="btn btn-ghost flex1" style="padding:12px;font-size:11px;letter-spacing:1px" onclick="exportConfig()">↓ EXPORTER CONFIG</button>
-          <button class="btn btn-ghost flex1" style="padding:12px;font-size:11px;letter-spacing:1px;border-color:var(--amber);color:var(--amber)" onclick="document.getElementById('import-config-input').click()">↑ IMPORTER CONFIG</button>
-        </div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">La config est exportée automatiquement à chaque export Excel. Pour restaurer :</div>
+        <button class="btn btn-ghost" style="width:100%;padding:12px;font-size:11px;letter-spacing:1px;border-color:var(--amber);color:var(--amber)" onclick="document.getElementById('import-config-input').click()">↑ IMPORTER CONFIG</button>
         <input type="file" id="import-config-input" accept=".json" style="display:none" onchange="importConfig(event)">
       </div>
-    </div>
-
-    <div class="card">
-      <div class="card-head"><div class="card-title">Historique global</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
-      </div>
-      <div class="card-body" id="admin-global-hist"></div>
-    </div>
-
-    <!-- TRÉSORERIE -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Trésorerie</div>
-        <button class="btn btn-ghost btn-sm" onclick="openTresorerie()">📊 Gérer</button>
-      </div>
-      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
     </div>
 
     <!-- CENTRAL CLEAR -->
@@ -713,14 +712,9 @@ function confirmBulkAction(dir, amount, label){
 function renderAdminMembers(){
   if(!members.length){document.getElementById('admin-members').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
   document.getElementById('admin-members').innerHTML=members.map(m=>{
-    const pinStatus=m.pin
-      ?`<span style="font-family:var(--mono);font-size:10px;color:var(--green)">●PIN</span>`
-      :`<span style="font-family:var(--mono);font-size:10px;color:var(--muted)">○ sans PIN</span>`;
     return`<div class="recap-row">
-      <div class="recap-name">${m.name} ${pinStatus}</div>
+      <div class="recap-name">${m.name}</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
-        ${m.pin?`<button class="btn btn-ghost btn-sm" style="border-color:var(--red-d);color:var(--red)" onclick="resetMemberPin('${m.id}')">↺ PIN</button>`:''}
-        <button class="btn btn-ghost btn-sm" onclick="openEditMember('${m.id}')">Modifier</button>
         <button class="btn btn-red btn-sm" onclick="deleteMember('${m.id}')">Suppr.</button>
       </div>
     </div>`;
@@ -762,9 +756,6 @@ function openAdminMember(id){
       <div>
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Solde actuel</div>
         <div style="font-family:var(--display);font-size:28px;font-weight:800;color:${balCls}">${b>=0?'+':''}${b.toFixed(2)} €</div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        ${m.pin?`<button class="btn btn-ghost btn-sm" style="border-color:var(--red-d);color:var(--red)" onclick="resetMemberPin('${id}')">↺ PIN</button>`:''}
       </div>
     </div>
     <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Historique (${hist.length} opérations)</div>
@@ -919,25 +910,6 @@ function saveMember(){
   saveM();toast(name+' ajouté','ok');closeSheet();renderAdmin();
 }
 
-function openEditMember(id){
-  const m=getM(id);
-  document.getElementById('sheet-body').innerHTML=`
-    <div class="sheet-title">Modifier — ${m.name}</div>
-    <div class="field"><label>Nom</label><input id="em-name" type="text" value="${m.name}"></div>
-    <div class="field"><label>Nouveau PIN (vide = inchangé)</label><input id="em-pin" type="password" maxlength="4" inputmode="numeric" placeholder="••••"></div>
-    <button class="btn btn-amber" onclick="saveEditMember('${id}')">ENREGISTRER</button>`;
-  openSheet();
-}
-
-function saveEditMember(id){
-  const m=getM(id);
-  const name=document.getElementById('em-name').value.trim();
-  const pin=document.getElementById('em-pin').value.trim();
-  if(!name)return toast('Nom requis','ko');
-  if(pin&&!/^\d{4}$/.test(pin))return toast('PIN invalide','ko');
-  m.name=name;if(pin)m.pin=pin;
-  saveM();toast('Enregistré','ok');closeSheet();renderAdmin();
-}
 
 function resetMemberPin(id){
   const m=getM(id);
@@ -1166,26 +1138,61 @@ function exportExcel(){
     ?`bar_vampires_${fromDate?slug(fromDate):'debut'}_au_${toDate?slug(toDate):slug(now)}.xlsx`
     :`bar_vampires_complet_${slug(now)}.xlsx`;
 
-  XLSX.writeFile(wb, filename);
+  // ── STEP 1 : CONFIG JSON EN MÉMOIRE (avant purge) ──
+  const configMembers = members.map(m => ({
+    ...m,
+    balance: balanceAt(m.history, m.balance||0),
+    history: (m.history||[])  // historique complet conservé dans la sauvegarde
+  }));
+  const configTreso = {};
+  TRESO_ACCOUNTS.forEach(a => {
+    const acc = t[a.id] || {balance:0, history:[]};
+    configTreso[a.id] = {
+      balance: tresoBalanceAt(acc.history||[], acc.balance||0),
+      history: (acc.history||[])  // historique complet conservé dans la sauvegarde
+    };
+  });
+  const config = {
+    version: APP_VERSION,
+    date: (toDate||new Date()).toISOString(),
+    periodeLabel,
+    tick: getTick(),
+    members: configMembers,
+    treso: configTreso
+  };
+  const jsonFilename = filename.replace('.xlsx','.json').replace('bar_vampires','bar_vampires_config');
+  const zipFilename = filename.replace('.xlsx','.zip').replace('bar_vampires','bar_vampires_export');
+
+  // ── STEP 2 : PURGE ──
+  members.forEach(m=>{ m.history=(m.history||[]).filter(h=>!inRange(h.date)); });
+  saveM();
+  TRESO_ACCOUNTS.forEach(a=>{ if(t[a.id]?.history) t[a.id].history=t[a.id].history.filter(h=>!inRange(h.date)); });
+  saveTreso(t);
   ss('bar2_last_export', new Date().toISOString());
 
-  // ── PURGE HISTORIQUE MEMBRES sur la plage uniquement ──
-  members.forEach(m=>{
-    m.history=(m.history||[]).filter(h=>!inRange(h.date));
-  });
-  saveM();
+  // ── STEP 3 : ZIP Excel + JSON → 1 seul téléchargement ──
+  const xlsxData = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const jsonStr = JSON.stringify(config, null, 2);
 
-  // ── PURGE HISTORIQUE TRÉSORERIE sur la plage uniquement ──
-  TRESO_ACCOUNTS.forEach(a=>{
-    if(t[a.id]?.history) t[a.id].history=t[a.id].history.filter(h=>!inRange(h.date));
-  });
-  saveTreso(t);
+  const zip = new JSZip();
+  zip.file(filename, xlsxData);
+  zip.file(jsonFilename, jsonStr);
 
-  const rangeMsg=(fromDate||toDate)?`historique du ${periodeLabel} effacé`:`historiques effacés`;
-  toast(`Export téléchargé — ${rangeMsg}`,'ok');
+  zip.generateAsync({type:'blob'}).then(zipBlob => {
+    const url = URL.createObjectURL(zipBlob);
+    const a = document.createElement('a');
+    a.href = url; a.download = zipFilename;
+    document.body.appendChild(a); a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    const rangeMsg=(fromDate||toDate)?`historique du ${periodeLabel} effacé`:`historiques effacés`;
+    toast(`Export téléchargé (ZIP) — ${rangeMsg}`,'ok');
+  });
+
   closeSheet();
   renderAdmin();
 }
+
 
 function exportConfig(){
   const config={
@@ -1242,6 +1249,7 @@ function confirmImportConfig(){
   members=config.members;
   saveM();
   if(config.tick) ss('bar2_tick', config.tick);
+  if(config.treso) saveTreso(config.treso);
   window._pendingConfig=null;
   closeSheet();
   renderAdmin();
@@ -1345,7 +1353,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.7.0';
+const APP_VERSION = '1.8.2';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1570,7 +1578,7 @@ function toggleTresoRecharge() {
 
 function saveTresoMove(accountId, sign) {
   const amount = parseFloat(document.getElementById('tm-amount').value);
-  const label = document.getElementById('tm-label').value.trim() || (sign > 0 ? 'Entrée' : 'Sortie');
+  let label = document.getElementById('tm-label').value.trim() || (sign > 0 ? 'Entrée' : 'Sortie');
   if (!amount || amount <= 0) return toast('Montant invalide', 'ko');
 
   let comment = '';
@@ -1584,6 +1592,7 @@ function saveTresoMove(accountId, sign) {
     const a = TRESO_ACCOUNTS.find(x => x.id === accountId);
     const memberName = members.find(m => m.id === memberId)?.name || '';
     comment = `Recharge ${memberName}`;
+    label = label !== 'Entrée' ? `Recharge ${memberName} — ${label}` : `Recharge ${memberName}`;
     addTx(memberId, 'recharge', `Recharge (${a.label})`, amount);
     renderHome();
     renderAdmin();
