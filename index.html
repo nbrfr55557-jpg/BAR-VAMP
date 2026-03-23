@@ -121,9 +121,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .field label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
 .field input{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;transition:border-color .15s}
 .field input:focus{border-color:var(--amber)}
-.quick-row{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
-.q-btn{background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 4px;font-family:var(--mono);font-size:12px;color:var(--amber2);text-align:center;cursor:pointer;transition:all .12s}
-.q-btn:hover{background:var(--s3);border-color:var(--amber)}
+/* q-btn removed */
 /* TOAST */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(12px);background:var(--s3);border:1px solid var(--border);border-radius:var(--r);padding:10px 18px;font-family:var(--mono);font-size:13px;opacity:0;transition:all .25s;pointer-events:none;z-index:999;white-space:nowrap}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -249,22 +247,29 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <button class="btn btn-ghost btn-sm" style="border-color:var(--amber);color:var(--amber);white-space:nowrap" onclick="openExportSheet()">↓ Exporter</button>
     </div>
 
+    <!-- Bouton Export Excel -->
+    <div style="display:flex;justify-content:center">
+      <button onclick="openExportSheet()" style="width:50%;background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:2px;color:#4ab8e8;cursor:pointer;transition:all .15s;text-transform:uppercase" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">↓ Export Excel</button>
+    </div>
+
     <div class="card">
-      <div class="card-head">
+      <div class="card-head" onclick="toggleRecapCard()" style="cursor:pointer;user-select:none">
         <div class="card-title">Récap comptes</div>
         <div style="display:flex;align-items:center;gap:8px">
-          <div onclick="toggleSelectAll()" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+          <div onclick="event.stopPropagation();toggleSelectAll()" style="display:flex;align-items:center;gap:6px;cursor:pointer">
             <div id="select-all-check" class="recap-check" style="width:20px;height:20px"></div>
             <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px">TOUS</span>
           </div>
-          <button class="btn btn-ghost btn-sm" onclick="openExportSheet()">↓ Export Excel</button>
+          <span id="recap-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
         </div>
       </div>
-      <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-        <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
-        <div id="admin-debts-total" style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red)"></div>
+      <div id="recap-collapsible" style="display:none">
+        <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
+          <div id="admin-debts-total" style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red)"></div>
+        </div>
+        <div class="card-body" id="admin-recap"></div>
       </div>
-      <div class="card-body" id="admin-recap"></div>
     </div>
 
     <div class="card">
@@ -273,12 +278,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
         <div class="field">
           <label>Montant (€)</label>
           <input id="bulk-amount" type="number" step="0.1" min="0.1" placeholder="ex : 5.00">
-          <div class="quick-row">
-            <div class="q-btn" onclick="setBulk(0.6)">0,60</div>
-            <div class="q-btn" onclick="setBulk(1.2)">1,20</div>
-            <div class="q-btn" onclick="setBulk(5)">5 €</div>
-            <div class="q-btn" onclick="setBulk(10)">10 €</div>
-          </div>
         </div>
         <div class="field">
           <label>Commentaire (optionnel)</label>
@@ -294,6 +293,23 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 
 
     <div class="card">
+      <div class="card-head">
+        <div class="card-title">☕ Cotiz Café</div>
+        <button onclick="openCotizCafe()" style="background:linear-gradient(135deg,#1a0f00,#2a1800);border:1px solid var(--amber);border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:var(--amber);cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#2a1800'" onmouseleave="this.style.background='linear-gradient(135deg,#1a0f00,#2a1800)'">☕ Appliquer</button>
+      </div>
+      <div class="card-body" style="padding:10px 16px" id="cotiz-cafe-preview"></div>
+    </div>
+
+    <!-- TRÉSORERIE -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Trésorerie</div>
+        <button onclick="openTresorerie()" style="background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:#4ab8e8;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">📊 Gérer</button>
+      </div>
+      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
+    </div>
+
+    <div class="card">
       <div class="card-head" onclick="toggleMembersCard()" style="cursor:pointer;user-select:none">
         <div class="card-title">Membres</div>
         <div style="display:flex;align-items:center;gap:8px">
@@ -306,19 +322,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 
 
     <div class="card">
-      <div class="card-head"><div class="card-title">Historique global</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
+      <div class="card-head" onclick="toggleHistCard()" style="cursor:pointer;user-select:none">
+        <div class="card-title">Historique global</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
+          <span id="hist-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+        </div>
       </div>
-      <div class="card-body" id="admin-global-hist"></div>
-    </div>
-
-    <!-- TRÉSORERIE -->
-    <div class="card">
-      <div class="card-head">
-        <div class="card-title">Trésorerie</div>
-        <button class="btn btn-ghost btn-sm" onclick="openTresorerie()">📊 Gérer</button>
-      </div>
-      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
+      <div id="admin-global-hist" class="card-body" style="display:none"></div>
     </div>
 
     <div class="card">
@@ -570,6 +581,14 @@ function checkAdminPin(){
 // ADMIN
 let selIds=new Set();
 
+function toggleRecapCard(){
+  const body=document.getElementById('recap-collapsible');
+  const chevron=document.getElementById('recap-chevron');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  chevron.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
 function toggleMembersCard(){
   const body=document.getElementById('admin-members');
   const chevron=document.getElementById('members-chevron');
@@ -578,8 +597,16 @@ function toggleMembersCard(){
   chevron.style.transform=open?'rotate(180deg)':'rotate(0deg)';
 }
 
+function toggleHistCard(){
+  const body=document.getElementById('admin-global-hist');
+  const chevron=document.getElementById('hist-chevron');
+  const open=body.style.display==='none';
+  body.style.display=open?'block':'none';
+  chevron.style.transform=open?'rotate(180deg)':'rotate(0deg)';
+}
+
 function renderAdmin(){
-  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();renderAdminGlobalHist();renderTresoPreview();
+  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();renderAdminGlobalHist();renderTresoPreview();renderCotizCafePreview();
   const vEl=document.getElementById('admin-version');
   if(vEl)vEl.textContent=APP_VERSION;
   const vEl2=document.getElementById('logo-version-admin');
@@ -669,7 +696,7 @@ function toggleSelectAll(){
 
 function toggleSel(id){selIds.has(id)?selIds.delete(id):selIds.add(id);renderRecap();updateBulkCount()}
 function updateBulkCount(){document.getElementById('bulk-sel-count').textContent=`${selIds.size} membre(s) sélectionné(s)`}
-function setBulk(v){document.getElementById('bulk-amount').value=v}
+
 
 function bulkAction(dir){
   const amount=parseFloat(document.getElementById('bulk-amount').value);
@@ -708,6 +735,194 @@ function confirmBulkAction(dir, amount, label){
   closeSheet();
   renderAdmin();
 }
+
+// ════════════════════════════════════
+// COTIZ CAFÉ
+// ════════════════════════════════════
+function getCafeExempts(){ return ls('bar2_cafe_exempts',[]); }
+function saveCafeExempts(ids){ ss('bar2_cafe_exempts', ids); }
+
+function renderCotizCafePreview(){
+  const el=document.getElementById('cotiz-cafe-preview');
+  if(!el)return;
+  const exempts=getCafeExempts();
+  const nbNonBuveurs=exempts.length;
+  const nbConcernes=members.filter(m=>!exempts.includes(m.id)).length;
+  el.innerHTML=`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${nbConcernes} buveur(s)</span>
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted)">${nbNonBuveurs} non-buveur(s) permanent(s)</span>
+    </div>`;
+}
+
+function buildMemberToggleList(listId, selectedIds, colorExempt, labelExempt, excludeIds=[]){
+  const liste=members.filter(m=>!excludeIds.includes(m.id));
+  if(!liste.length) return`<div style="font-family:var(--mono);font-size:11px;color:var(--muted);padding:10px 8px">Tous les membres sont non-buveurs.</div>`;
+  return`<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:8px;max-height:200px;overflow-y:auto" id="${listId}">
+    ${[...liste].sort((a,b)=>{
+      const ae=selectedIds.includes(a.id), be=selectedIds.includes(b.id);
+      return ae===be?0:ae?-1:1;
+    }).map(m=>{
+      const checked=selectedIds.includes(m.id);
+      return`<div id="${listId}-row-${m.id}" onclick="cafeListToggle('${listId}','${m.id}')" style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-bottom:1px solid var(--border);cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none">
+        <div style="width:20px;height:20px;border-radius:5px;border:2px solid ${checked?colorExempt:'var(--border)'};background:${checked?colorExempt:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:12px;color:#000">${checked?'✓':''}</div>
+        <span style="font-size:14px;color:${checked?'var(--muted)':'var(--text)'};flex:1">${m.name}</span>
+        ${checked?`<span style="font-family:var(--mono);font-size:10px;color:${colorExempt}">${labelExempt}</span>`:''}
+      </div>`;
+    }).join('')}
+  </div>`;
+}
+
+function toggleCafeNonBuveurs(){
+  const panel=document.getElementById('cafe-nb-panel');
+  const arrow=document.getElementById('cafe-nb-arrow');
+  const open=panel.style.display==='none';
+  panel.style.display=open?'block':'none';
+  arrow.style.transform=open?'rotate(90deg)':'';
+}
+
+// Stockage temporaire des deux listes en cours d'édition
+window._cafeNonBuveurs=null;
+window._cafeAbsents=null;
+
+function openCotizCafe(){
+  const exempts=getCafeExempts();
+  window._cafeNonBuveurs=[...exempts];
+  window._cafeAbsents=[];
+
+  const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const now=new Date();
+  const monthOptions=MOIS.map((m,i)=>`<option value="${i+1}"${i===now.getMonth()?' selected':''}>${m}</option>`).join('');
+  const yearOptions=[now.getFullYear()-1, now.getFullYear(), now.getFullYear()+1].map(y=>`<option value="${y}"${y===now.getFullYear()?' selected':''}>${y}</option>`).join('');
+
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">☕ Cotiz Café</div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+      <div class="field" style="margin-bottom:0">
+        <label>Mois</label>
+        <select id="cafe-month" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">${monthOptions}</select>
+      </div>
+      <div class="field" style="margin-bottom:0">
+        <label>Année</label>
+        <select id="cafe-year" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">${yearOptions}</select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Montant de la cotiz (€)</label>
+      <input id="cafe-amount" type="number" step="0.5" min="0.5" placeholder="ex : 5.00">
+    </div>
+
+    <!-- Non-buveurs permanents (déroulant) -->
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:14px">
+      <button onclick="toggleCafeNonBuveurs()" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent">
+        <div>
+          <span style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:1px">☕ NON-BUVEURS PERMANENTS</span>
+          <span id="cafe-nb-count" style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:8px">${window._cafeNonBuveurs.length ? window._cafeNonBuveurs.length+' sélectionné(s)' : 'aucun'}</span>
+        </div>
+        <div id="cafe-nb-arrow" style="font-family:var(--mono);font-size:13px;color:var(--muted);transition:transform .2s">▸</div>
+      </button>
+      <div id="cafe-nb-panel" style="display:none;margin-top:12px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6">Toujours exclus. Liste mémorisée d'un mois à l'autre.</div>
+        ${buildMemberToggleList('cafe-nonbuveurs', window._cafeNonBuveurs, 'var(--amber)', 'jamais')}
+      </div>
+    </div>
+
+    <!-- Absents du mois (seulement les buveurs) -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--green);text-transform:uppercase">📅 Absents ce mois-ci</div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--muted)">remis à zéro après</span>
+    </div>
+    <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:8px;line-height:1.6">Parmi les buveurs, qui était absent ? Exclus uniquement pour cette application.</div>
+    ${buildMemberToggleList('cafe-absents', window._cafeAbsents, 'var(--green)', 'absent')}
+
+    <div style="height:1px;background:var(--border);margin:16px 0"></div>
+
+    <button class="btn btn-amber" style="width:100%;padding:14px;font-size:14px" onclick="applyCotizCafe()">☕ APPLIQUER LA COTIZ</button>
+    <button class="btn btn-ghost" style="width:100%;padding:11px;margin-top:8px;font-size:11px" onclick="closeSheet()">Annuler</button>`;
+  openSheet();
+}
+
+function cafeListToggle(listId, memberId){
+  const arr = listId==='cafe-nonbuveurs' ? window._cafeNonBuveurs : window._cafeAbsents;
+  const idx=arr.indexOf(memberId);
+  if(idx>=0) arr.splice(idx,1); else arr.push(memberId);
+  // Sauvegarder immédiatement les non-buveurs et mettre à jour le compteur
+  if(listId==='cafe-nonbuveurs'){
+    saveCafeExempts(window._cafeNonBuveurs);
+    const countEl=document.getElementById('cafe-nb-count');
+    if(countEl) countEl.textContent=window._cafeNonBuveurs.length ? window._cafeNonBuveurs.length+' sélectionné(s)' : 'aucun';
+  }
+  // Update row visuel
+  const color=listId==='cafe-nonbuveurs'?'var(--amber)':'var(--green)';
+  const label=listId==='cafe-nonbuveurs'?'jamais':'absent';
+  const row=document.getElementById(listId+'-row-'+memberId);
+  if(!row)return;
+  const checked=arr.includes(memberId);
+  const box=row.querySelector('div');
+  const nameSpan=row.querySelector('span');
+  const tagSpan=row.querySelectorAll('span')[1];
+  box.style.border=`2px solid ${checked?color:'var(--border)'}`;
+  box.style.background=checked?color:'transparent';
+  box.textContent=checked?'✓':'';
+  nameSpan.style.color=checked?'var(--muted)':'var(--text)';
+  if(checked&&!tagSpan){
+    const tag=document.createElement('span');
+    tag.style.cssText=`font-family:var(--mono);font-size:10px;color:${color}`;
+    tag.textContent=label;
+    row.appendChild(tag);
+  } else if(!checked&&tagSpan){
+    tagSpan.remove();
+  }
+  renderCotizCafePreview();
+}
+
+function applyCotizCafe(){
+  const amount=parseFloat(document.getElementById('cafe-amount').value);
+  if(!amount||amount<=0) return toast('Montant invalide','ko');
+  const month=parseInt(document.getElementById('cafe-month').value);
+  const year=parseInt(document.getElementById('cafe-year').value);
+  const MOIS=['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+  const label=`Cotiz café ${MOIS[month-1]} ${year}`;
+  const exclus=new Set([...window._cafeNonBuveurs, ...window._cafeAbsents]);
+  const cibles=members.filter(m=>!exclus.has(m.id));
+  if(!cibles.length) return toast('Aucun membre concerné','ko');
+
+  const nbNonBuveurs=window._cafeNonBuveurs.length;
+  const nbAbsents=window._cafeAbsents.filter(id=>!window._cafeNonBuveurs.includes(id)).length;
+
+  document.getElementById('sheet-body').innerHTML=`
+    <div class="sheet-title">☕ Confirmer la cotiz</div>
+    <div style="background:var(--s2);border-radius:var(--r);padding:16px;margin-bottom:16px">
+      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;margin-bottom:6px">MONTANT PAR MEMBRE</div>
+      <div style="font-family:var(--display);font-size:32px;font-weight:800;color:var(--red)">-${amount.toFixed(2)} €</div>
+      <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:8px">${label}</div>
+    </div>
+    <div style="display:flex;gap:12px;margin-bottom:12px">
+      ${nbNonBuveurs?`<div style="background:var(--s2);border:1px solid var(--amber);border-radius:var(--r-sm);padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--amber)">${nbNonBuveurs} non-buveur(s)</div>`:''}
+      ${nbAbsents?`<div style="background:var(--s2);border:1px solid var(--green);border-radius:var(--r-sm);padding:8px 12px;font-family:var(--mono);font-size:11px;color:var(--green)">${nbAbsents} absent(s)</div>`:''}
+    </div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">${cibles.length} membre(s) débité(s)</div>
+    <div style="background:var(--s2);border-radius:var(--r);padding:12px 16px;margin-bottom:20px;max-height:180px;overflow-y:auto">
+      ${cibles.map(m=>`<div style="padding:5px 0;border-bottom:1px solid var(--border);font-size:14px;color:var(--text)">${m.name}</div>`).join('')}
+    </div>
+    <button class="btn btn-red" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="confirmCotizCafe(${amount},'${label.replace(/'/g,"\\'")}')">CONFIRMER</button>
+    <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="openCotizCafe()">← Retour</button>`;
+}
+
+function confirmCotizCafe(amount, label){
+  const exclus=new Set([...window._cafeNonBuveurs, ...window._cafeAbsents]);
+  const cibles=members.filter(m=>!exclus.has(m.id));
+  cibles.forEach(m=>addTx(m.id,'debit',label,amount));
+  // Reset absents — les non-buveurs sont déjà sauvegardés
+  window._cafeAbsents=[];
+  window._cafeNonBuveurs=null;
+  toast(`Cotiz café appliquée — ${cibles.length} membres débités`,'ok');
+  closeSheet();
+  renderAdmin();
+}
+
 
 function renderAdminMembers(){
   if(!members.length){document.getElementById('admin-members').innerHTML=`<div class="recap-row"><span style="color:var(--muted)">Aucun membre</span></div>`;return}
@@ -859,12 +1074,6 @@ function openInitMember(id){
     <div class="field">
       <label>Solde initial (€)</label>
       <input id="init-amount" type="number" step="0.5" placeholder="ex : 10.00 ou -5.00" value="${m.balance||''}">
-    </div>
-    <div class="quick-row" style="margin-bottom:14px">
-      <div class="q-btn" style="color:var(--green)" onclick="document.getElementById('init-amount').value=5">+5</div>
-      <div class="q-btn" style="color:var(--green)" onclick="document.getElementById('init-amount').value=10">+10</div>
-      <div class="q-btn" style="color:var(--red)" onclick="document.getElementById('init-amount').value=-5">-5</div>
-      <div class="q-btn" style="color:var(--red)" onclick="document.getElementById('init-amount').value=-10">-10</div>
     </div>
     <button class="btn btn-amber" onclick="saveInitMember('${id}')">ENREGISTRER</button>`;
   openSheet();
@@ -1279,6 +1488,13 @@ function openCentralClear(){
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">Remet Banque, Lydia et Espèces à 0 et vide leur historique</div>
         </div>
       </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer">
+        <input type="checkbox" id="cc-cafe" checked style="width:16px;height:16px;accent-color:var(--red)">
+        <div>
+          <div style="font-size:13px;font-weight:500">Cotiz Café</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">Efface la liste des non-buveurs permanents</div>
+        </div>
+      </label>
     </div>
     <button class="btn btn-red" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="openCentralClearPin()">OUI, CONTINUER</button>
     <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="closeSheet()">Annuler</button>`;
@@ -1290,7 +1506,8 @@ function openCentralClearPin(){
   // Mémoriser les choix avant de passer à l'écran PIN
   window._ccMembers = document.getElementById('cc-members')?.checked !== false;
   window._ccTreso   = document.getElementById('cc-treso')?.checked !== false;
-  if(!window._ccMembers && !window._ccTreso) return toast('Sélectionne au moins une option','ko');
+  window._ccCafe    = document.getElementById('cc-cafe')?.checked !== false;
+  if(!window._ccMembers && !window._ccTreso && !window._ccCafe) return toast('Sélectionne au moins une option','ko');
   ccPinBuf='';
   document.getElementById('sheet-body').innerHTML=`
     <div class="sheet-title" style="color:var(--red)">Confirme ton code admin</div>
@@ -1330,10 +1547,12 @@ function ccCheckPin(){
   // PIN correct → CENTRAL CLEAR selon les cases cochées
   const clearMembers = window._ccMembers !== false;
   const clearTreso   = window._ccTreso   !== false;
+  const clearCafe    = window._ccCafe    !== false;
   let msg = [];
   if(clearMembers){ members.forEach(m=>{ m.balance=0; m.history=[]; }); saveM(); msg.push('comptes membres'); }
   if(clearTreso){ const t=getTreso(); TRESO_ACCOUNTS.forEach(a=>{ t[a.id]={balance:0,history:[]}; }); saveTreso(t); msg.push('trésorerie'); }
-  window._ccMembers=null; window._ccTreso=null;
+  if(clearCafe){ saveCafeExempts([]); msg.push('cotiz café'); }
+  window._ccMembers=null; window._ccTreso=null; window._ccCafe=null;
   closeSheet();
   renderAdmin();
   toast('CENTRAL CLEAR — '+msg.join(' + ')+' remis à zéro','ok');
@@ -1353,7 +1572,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.8.2';
+const APP_VERSION = '1.9.6';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1458,10 +1677,10 @@ function openTresorerie() {
 
     <!-- Initialisation des soldes -->
     <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:20px">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleTresoInit()">
+      <button onclick="toggleTresoInit()" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent">
         <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px">⚙ INITIALISER LES SOLDES</div>
         <div id="treso-init-arrow" style="font-family:var(--mono);font-size:13px;color:var(--muted);transition:transform .2s">▸</div>
-      </div>
+      </button>
       <div id="treso-init-panel" style="display:none;margin-top:14px">
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.6">Définit le solde de départ de chaque compte. L'historique est conservé.</div>
         ${TRESO_ACCOUNTS.map(a => `
@@ -1536,9 +1755,6 @@ function openTresoMove(accountId) {
     <div class="field">
       <label>Montant (€)</label>
       <input id="tm-amount" type="number" step="0.5" min="0.01" placeholder="0.00">
-      <div class="quick-row">
-        ${[5, 10, 20, 50].map(v => `<div class="q-btn" onclick="document.getElementById('tm-amount').value=${v}">${v} €</div>`).join('')}
-      </div>
     </div>
     <div class="field">
       <label>Libellé</label>
@@ -1547,10 +1763,10 @@ function openTresoMove(accountId) {
 
     <!-- Toggle recharge membre -->
     <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:14px">
-      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleTresoRecharge()">
+      <button onclick="toggleTresoRecharge()" style="width:100%;background:none;border:none;display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:0;-webkit-tap-highlight-color:transparent">
         <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:1px">🔄 RECHARGE D'UN MEMBRE</div>
         <div id="treso-recharge-arrow" style="font-family:var(--mono);font-size:13px;color:var(--muted);transition:transform .2s">▸</div>
-      </div>
+      </button>
       <div id="treso-recharge-panel" style="display:none;margin-top:12px">
         <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">MEMBRE À RECHARGER</div>
         <select id="tm-member" style="width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;margin-bottom:0">
