@@ -155,29 +155,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
 </div>
 
-<!-- PIN MEMBRE -->
-<div id="s-pin" class="screen">
-  <div class="topbar">
-    <div class="logo">Bar<sub>asso</sub></div>
-    <button class="btn btn-ghost" onclick="goHome()">← Retour</button>
-  </div>
-  <div class="pin-wrap">
-    <div style="text-align:center">
-      <div class="pin-who" id="pin-who"></div>
-      <div class="pin-sub" style="margin-top:6px">ENTRE TON CODE</div>
-    </div>
-    <div class="pin-dots">
-      <div class="pin-dot" id="pd0"></div><div class="pin-dot" id="pd1"></div>
-      <div class="pin-dot" id="pd2"></div><div class="pin-dot" id="pd3"></div>
-    </div>
-    <div class="pin-pad">
-      <div class="pin-key" onclick="pk(1)">1</div><div class="pin-key" onclick="pk(2)">2</div><div class="pin-key" onclick="pk(3)">3</div>
-      <div class="pin-key" onclick="pk(4)">4</div><div class="pin-key" onclick="pk(5)">5</div><div class="pin-key" onclick="pk(6)">6</div>
-      <div class="pin-key" onclick="pk(7)">7</div><div class="pin-key" onclick="pk(8)">8</div><div class="pin-key" onclick="pk(9)">9</div>
-      <div class="pin-key empty-key"></div><div class="pin-key" onclick="pk(0)">0</div><div class="pin-key" onclick="pkDel()">⌫</div>
-    </div>
-  </div>
-</div>
 
 <!-- DASHBOARD MEMBRE -->
 <div id="s-dash" class="screen">
@@ -187,15 +164,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
   <div class="dash-body">
 
-    <!-- Bandeau PIN (visible si pas de PIN) -->
-    <div id="pin-banner" style="display:none;background:#1a1200;border:1px solid #7c5c00;border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
-      <span style="font-size:22px">🔐</span>
-      <div style="flex:1">
-        <div style="font-size:13px;font-weight:500;color:#fbbf24">Aucun code PIN défini</div>
-        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">Crée ton code pour sécuriser ton compte</div>
-      </div>
-      <button class="btn btn-ghost btn-sm" style="border-color:#7c5c00;color:#fbbf24;white-space:nowrap" onclick="openCreatePin()">Créer</button>
-    </div>
 
     <!-- Solde + récap fusionnés dans une seule carte stable -->
     <div class="balance-card" style="overflow:visible">
@@ -227,10 +195,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="history-list" id="dash-history"></div>
     </div>
 
-    <!-- Modifier PIN (visible si PIN déjà défini) -->
-    <div id="change-pin-wrap" style="display:none;padding-bottom:80px">
-      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:11px;letter-spacing:1px" onclick="openChangePin()">🔑 Modifier mon code PIN</button>
-    </div>
 
   </div>
 
@@ -369,6 +333,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="card-body" id="admin-global-hist"></div>
     </div>
 
+    <!-- TRÉSORERIE -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Trésorerie</div>
+        <button class="btn btn-ghost btn-sm" onclick="openTresorerie()">📊 Gérer</button>
+      </div>
+      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
+    </div>
+
     <!-- CENTRAL CLEAR -->
     <div style="padding:8px 0 24px">
       <button onclick="openCentralClear()" style="
@@ -464,28 +437,16 @@ function renderHome(){
   }).join('');
 }
 
-// PIN MEMBRE
+// PIN MEMBRE supprimé — accès direct au dashboard
 let currentMemberId=null,pinBuf='';
 
 function startPinFor(id){
   const m=getM(id);if(!m)return;
-  if(!m.pin){openDash(id);return}
-  currentMemberId=id;pinBuf='';
-  document.getElementById('pin-who').textContent=m.name;
-  updDots('p',pinBuf,false);
-  showScreen('s-pin');
-}
-
-function pk(n){if(pinBuf.length>=4)return;pinBuf+=n;updDots('p',pinBuf,false);if(pinBuf.length===4)checkPin()}
-function pkDel(){pinBuf=pinBuf.slice(0,-1);updDots('p',pinBuf,false)}
-function checkPin(){
-  const m=getM(currentMemberId);
-  if(pinBuf===m.pin){openDash(currentMemberId)}
-  else{updDots('p','',true);pinBuf='';toast('Code incorrect','ko');setTimeout(()=>updDots('p','',false),600)}
+  openDash(id);
 }
 
 function updDots(prefix,buf,err){
-  const ids=prefix==='p'?['pd0','pd1','pd2','pd3']:['apd0','apd1','apd2','apd3'];
+  const ids=['apd0','apd1','apd2','apd3'];
   ids.forEach((id,i)=>{const d=document.getElementById(id);if(d)d.className='pin-dot'+(err?' err':i<buf.length?' on':'')});
 }
 
@@ -509,11 +470,6 @@ function refreshDash(){
   document.getElementById('dash-name-sub').textContent=m.name;
   const topName=document.getElementById('dash-topbar-name');
   if(topName)topName.textContent=m.name;
-  // Bandeau PIN
-  const banner=document.getElementById('pin-banner');
-  const changeWrap=document.getElementById('change-pin-wrap');
-  if(m.pin){banner.style.display='none';changeWrap.style.display='block';}
-  else{banner.style.display='flex';changeWrap.style.display='none';}
   renderDashHist(m);
 }
 
@@ -531,186 +487,6 @@ function renderDashHist(m){
       <div class="hist-amount ${isPos?'pos':'neg'}">${isPos?'+':'-'}${h.amount.toFixed(2)} €</div>
     </div>`;
   }).join('');
-}
-
-// ── GESTION PIN MEMBRE (depuis le dashboard) ──
-function openCreatePin(){
-  stopTimer();
-  document.getElementById('sheet-body').innerHTML=`
-    <div class="sheet-title">Créer ton code PIN</div>
-    <div style="font-family:var(--mono);font-size:12px;color:var(--muted);margin-bottom:18px;line-height:1.7">
-      Choisis un code à 4 chiffres.<br>Tu en auras besoin à chaque connexion.
-    </div>
-    <div id="cp-step1">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">NOUVEAU CODE</div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="cp-dots1">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-      <div class="pin-pad" style="max-width:280px;margin:0 auto">
-        <div class="pin-key" onclick="cpKey(1,'1')">1</div><div class="pin-key" onclick="cpKey(1,'2')">2</div><div class="pin-key" onclick="cpKey(1,'3')">3</div>
-        <div class="pin-key" onclick="cpKey(1,'4')">4</div><div class="pin-key" onclick="cpKey(1,'5')">5</div><div class="pin-key" onclick="cpKey(1,'6')">6</div>
-        <div class="pin-key" onclick="cpKey(1,'7')">7</div><div class="pin-key" onclick="cpKey(1,'8')">8</div><div class="pin-key" onclick="cpKey(1,'9')">9</div>
-        <div class="pin-key empty-key"></div><div class="pin-key" onclick="cpKey(1,'0')">0</div><div class="pin-key" onclick="cpDel(1)">⌫</div>
-      </div>
-    </div>
-    <div id="cp-step2" style="display:none">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">CONFIRME TON CODE</div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="cp-dots2">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-      <div class="pin-pad" style="max-width:280px;margin:0 auto">
-        <div class="pin-key" onclick="cpKey(2,'1')">1</div><div class="pin-key" onclick="cpKey(2,'2')">2</div><div class="pin-key" onclick="cpKey(2,'3')">3</div>
-        <div class="pin-key" onclick="cpKey(2,'4')">4</div><div class="pin-key" onclick="cpKey(2,'5')">5</div><div class="pin-key" onclick="cpKey(2,'6')">6</div>
-        <div class="pin-key" onclick="cpKey(2,'7')">7</div><div class="pin-key" onclick="cpKey(2,'8')">8</div><div class="pin-key" onclick="cpKey(2,'9')">9</div>
-        <div class="pin-key empty-key"></div><div class="pin-key" onclick="cpKey(2,'0')">0</div><div class="pin-key" onclick="cpDel(2)">⌫</div>
-      </div>
-    </div>`;
-  openSheet();
-}
-
-let cpBuf1='', cpBuf2='';
-
-function cpKey(step, n){
-  if(step===1){
-    if(cpBuf1.length>=4)return;
-    cpBuf1+=n;
-    cpUpdDots('cp-dots1', cpBuf1);
-    if(cpBuf1.length===4){
-      document.getElementById('cp-step1').style.display='none';
-      document.getElementById('cp-step2').style.display='block';
-      cpBuf2='';
-      cpUpdDots('cp-dots2','');
-    }
-  } else {
-    if(cpBuf2.length>=4)return;
-    cpBuf2+=n;
-    cpUpdDots('cp-dots2', cpBuf2);
-    if(cpBuf2.length===4) cpValidate();
-  }
-}
-
-function cpDel(step){
-  if(step===1){ cpBuf1=cpBuf1.slice(0,-1); cpUpdDots('cp-dots1',cpBuf1); }
-  else { cpBuf2=cpBuf2.slice(0,-1); cpUpdDots('cp-dots2',cpBuf2); }
-}
-
-function cpUpdDots(containerId, buf){
-  const dots=document.getElementById(containerId).querySelectorAll('.pin-dot');
-  dots.forEach((d,i)=>{ d.className='pin-dot'+(i<buf.length?' on':''); });
-}
-
-function cpValidate(){
-  if(cpBuf1!==cpBuf2){
-    toast('Les codes ne correspondent pas','ko');
-    // Retour à l'étape 1
-    cpBuf1=''; cpBuf2='';
-    document.getElementById('cp-step1').style.display='block';
-    document.getElementById('cp-step2').style.display='none';
-    cpUpdDots('cp-dots1','');
-    return;
-  }
-  const m=getM(currentMemberId);
-  m.pin=cpBuf1; saveM();
-  toast('Code PIN créé !','ok');
-  closeSheet(); refreshDash(); resetTimer();
-}
-
-function openChangePin(){
-  stopTimer();
-  document.getElementById('sheet-body').innerHTML=`
-    <div class="sheet-title">Modifier mon PIN</div>
-    <div id="chp-step1">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">ANCIEN CODE</div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots1">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-      <div class="pin-pad" style="max-width:280px;margin:0 auto">
-        <div class="pin-key" onclick="chpKey(1,'1')">1</div><div class="pin-key" onclick="chpKey(1,'2')">2</div><div class="pin-key" onclick="chpKey(1,'3')">3</div>
-        <div class="pin-key" onclick="chpKey(1,'4')">4</div><div class="pin-key" onclick="chpKey(1,'5')">5</div><div class="pin-key" onclick="chpKey(1,'6')">6</div>
-        <div class="pin-key" onclick="chpKey(1,'7')">7</div><div class="pin-key" onclick="chpKey(1,'8')">8</div><div class="pin-key" onclick="chpKey(1,'9')">9</div>
-        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(1,'0')">0</div><div class="pin-key" onclick="chpDel(1)">⌫</div>
-      </div>
-    </div>
-    <div id="chp-step2" style="display:none">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">NOUVEAU CODE</div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots2">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-      <div class="pin-pad" style="max-width:280px;margin:0 auto">
-        <div class="pin-key" onclick="chpKey(2,'1')">1</div><div class="pin-key" onclick="chpKey(2,'2')">2</div><div class="pin-key" onclick="chpKey(2,'3')">3</div>
-        <div class="pin-key" onclick="chpKey(2,'4')">4</div><div class="pin-key" onclick="chpKey(2,'5')">5</div><div class="pin-key" onclick="chpKey(2,'6')">6</div>
-        <div class="pin-key" onclick="chpKey(2,'7')">7</div><div class="pin-key" onclick="chpKey(2,'8')">8</div><div class="pin-key" onclick="chpKey(2,'9')">9</div>
-        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(2,'0')">0</div><div class="pin-key" onclick="chpDel(2)">⌫</div>
-      </div>
-    </div>
-    <div id="chp-step3" style="display:none">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:2px;text-align:center;margin-bottom:12px">CONFIRME LE NOUVEAU CODE</div>
-      <div style="display:flex;gap:14px;justify-content:center;margin-bottom:20px" id="chp-dots3">
-        <div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div><div class="pin-dot"></div>
-      </div>
-      <div class="pin-pad" style="max-width:280px;margin:0 auto">
-        <div class="pin-key" onclick="chpKey(3,'1')">1</div><div class="pin-key" onclick="chpKey(3,'2')">2</div><div class="pin-key" onclick="chpKey(3,'3')">3</div>
-        <div class="pin-key" onclick="chpKey(3,'4')">4</div><div class="pin-key" onclick="chpKey(3,'5')">5</div><div class="pin-key" onclick="chpKey(3,'6')">6</div>
-        <div class="pin-key" onclick="chpKey(3,'7')">7</div><div class="pin-key" onclick="chpKey(3,'8')">8</div><div class="pin-key" onclick="chpKey(3,'9')">9</div>
-        <div class="pin-key empty-key"></div><div class="pin-key" onclick="chpKey(3,'0')">0</div><div class="pin-key" onclick="chpDel(3)">⌫</div>
-      </div>
-    </div>`;
-  openSheet();
-}
-
-let chpBuf1='', chpBuf2='', chpBuf3='';
-
-function chpKey(step, n){
-  if(step===1){
-    if(chpBuf1.length>=4)return;
-    chpBuf1+=n; chpUpdDots('chp-dots1',chpBuf1);
-    if(chpBuf1.length===4){
-      const m=getM(currentMemberId);
-      if(chpBuf1!==m.pin){
-        toast('Ancien code incorrect','ko');
-        chpBuf1=''; chpUpdDots('chp-dots1',''); return;
-      }
-      document.getElementById('chp-step1').style.display='none';
-      document.getElementById('chp-step2').style.display='block';
-    }
-  } else if(step===2){
-    if(chpBuf2.length>=4)return;
-    chpBuf2+=n; chpUpdDots('chp-dots2',chpBuf2);
-    if(chpBuf2.length===4){
-      document.getElementById('chp-step2').style.display='none';
-      document.getElementById('chp-step3').style.display='block';
-    }
-  } else {
-    if(chpBuf3.length>=4)return;
-    chpBuf3+=n; chpUpdDots('chp-dots3',chpBuf3);
-    if(chpBuf3.length===4) chpValidate();
-  }
-}
-
-function chpDel(step){
-  if(step===1){ chpBuf1=chpBuf1.slice(0,-1); chpUpdDots('chp-dots1',chpBuf1); }
-  else if(step===2){ chpBuf2=chpBuf2.slice(0,-1); chpUpdDots('chp-dots2',chpBuf2); }
-  else { chpBuf3=chpBuf3.slice(0,-1); chpUpdDots('chp-dots3',chpBuf3); }
-}
-
-function chpUpdDots(containerId, buf){
-  const dots=document.getElementById(containerId).querySelectorAll('.pin-dot');
-  dots.forEach((d,i)=>{ d.className='pin-dot'+(i<buf.length?' on':''); });
-}
-
-function chpValidate(){
-  if(chpBuf2!==chpBuf3){
-    toast('Les nouveaux codes ne correspondent pas','ko');
-    chpBuf2=''; chpBuf3='';
-    document.getElementById('chp-step2').style.display='block';
-    document.getElementById('chp-step3').style.display='none';
-    chpUpdDots('chp-dots2','');
-    return;
-  }
-  const m=getM(currentMemberId);
-  m.pin=chpBuf2; saveM();
-  toast('Code PIN modifié','ok');
-  closeSheet(); refreshDash(); resetTimer();
 }
 
 // ── CONSO ──
@@ -804,7 +580,7 @@ function toggleMembersCard(){
 }
 
 function renderAdmin(){
-  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();renderAdminGlobalHist();
+  selIds.clear();renderRecap();renderAdminMembers();updateBulkCount();renderAdminGlobalHist();renderTresoPreview();
   const vEl=document.getElementById('admin-version');
   if(vEl)vEl.textContent=APP_VERSION;
   const vEl2=document.getElementById('logo-version-admin');
@@ -988,7 +764,6 @@ function openAdminMember(id){
         <div style="font-family:var(--display);font-size:28px;font-weight:800;color:${balCls}">${b>=0?'+':''}${b.toFixed(2)} €</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end">
-        <button class="btn btn-green btn-sm" onclick="closeSheet();openRecharge('${id}')">+ Recharger</button>
         ${m.pin?`<button class="btn btn-ghost btn-sm" style="border-color:var(--red-d);color:var(--red)" onclick="resetMemberPin('${id}')">↺ PIN</button>`:''}
       </div>
     </div>
@@ -1123,29 +898,6 @@ function saveInitMember(id){
   closeSheet();renderAdmin();
 }
 
-function openRecharge(id){
-  const m=getM(id);const b=m.balance||0;
-  document.getElementById('sheet-body').innerHTML=`
-    <div class="sheet-title">Recharger — ${m.name}</div>
-    <div style="font-family:var(--mono);font-size:13px;color:${b>=0?'var(--green)':'var(--red)'};margin-bottom:16px">Solde actuel : ${b>=0?'+':''}${b.toFixed(2)} €</div>
-    <div class="field">
-      <label>Montant reçu (€)</label>
-      <input id="r-amount" type="number" step="0.5" min="0.5" placeholder="0.00">
-      <div class="quick-row">
-        ${[5,10,20,50].map(v=>`<div class="q-btn" onclick="document.getElementById('r-amount').value=${v}">${v} €</div>`).join('')}
-      </div>
-    </div>
-    <button class="btn btn-amber" onclick="saveRecharge('${id}')">VALIDER RECHARGE</button>`;
-  openSheet();
-}
-
-function saveRecharge(id){
-  const amount=parseFloat(document.getElementById('r-amount').value);
-  if(!amount||amount<=0)return toast('Montant invalide','ko');
-  addTx(id,'recharge','Recharge (virement)',amount);
-  toast('+'+amount.toFixed(2)+' € crédité','ok');
-  closeSheet();renderAdmin();
-}
 
 function openAddMember(){
   document.getElementById('sheet-body').innerHTML=`
@@ -1227,9 +979,13 @@ function openExportSheet(){
       • <b style="color:var(--text)">Historique</b> — toutes les transactions sur la période
     </div>
     <div class="field">
-      <label>Date de départ (optionnelle)</label>
+      <label>Date de début (optionnelle)</label>
       <input id="exp-from" type="date" value="" max="${today}">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Laisser vide = tout l'historique</div>
+    </div>
+    <div class="field">
+      <label>Date de fin (optionnelle)</label>
+      <input id="exp-to" type="date" value="${today}" max="${today}">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Laisser les deux champs vides = tout l'historique — seul l'historique dans cette période sera effacé après l'export</div>
     </div>
     <button class="btn btn-amber" onclick="exportExcel()">↓ EXPORTER</button>`;
   openSheet();
@@ -1239,16 +995,29 @@ function exportExcel(){
   if(typeof XLSX==='undefined')return toast('SheetJS non chargé','ko');
   const now=new Date();
   const fromVal=document.getElementById('exp-from').value;
+  const toVal=document.getElementById('exp-to').value;
   const fromDate=fromVal?new Date(fromVal):null;
+  const toDate=toVal?new Date(toVal+'T23:59:59.999'):null;
 
   const dateStr=d=>new Date(d).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
-  const periodeLabel=fromDate?`Du ${dateStr(fromDate)} au ${dateStr(now)}`:`Tout l'historique (au ${dateStr(now)})`;
-  const filterHist=hist=>fromDate?hist.filter(h=>new Date(h.date)>=fromDate):hist;
+  let periodeLabel;
+  if(fromDate&&toDate) periodeLabel=`Du ${dateStr(fromDate)} au ${dateStr(toDate)}`;
+  else if(fromDate) periodeLabel=`Du ${dateStr(fromDate)} au ${dateStr(now)}`;
+  else if(toDate) periodeLabel=`Jusqu'au ${dateStr(toDate)}`;
+  else periodeLabel=`Tout l'historique (au ${dateStr(now)})`;
+
+  const inRange=date=>{
+    const d=new Date(date);
+    if(fromDate&&d<fromDate)return false;
+    if(toDate&&d>toDate)return false;
+    return true;
+  };
+  const filterHist=hist=>hist.filter(h=>inRange(h.date));
   const typeLabel={conso:'Consommation',recharge:'Recharge',credit:'Crédit collectif',debit:'Débit collectif'};
 
   const wb=XLSX.utils.book_new();
 
-  // ══ FEUILLE 1 : RÉCAP ENRICHI ══
+  // ══ FEUILLE 1 : RÉCAP MEMBRES ══
   const recapData=[
     ['Bar des Vampires — Récapitulatif comptable'],
     ['Période : '+periodeLabel],
@@ -1256,76 +1025,43 @@ function exportExcel(){
     [],
     ['Membre','Solde actuel (€)','Total débité (€)','Total crédité (€)','Nb consos','Opérations collectives','Détail collectif']
   ];
-
   members.forEach(m=>{
     const filtered=filterHist(m.history||[]);
     const consos=filtered.filter(h=>h.type==='conso');
     const debits=filtered.filter(h=>h.type==='debit');
     const credits=filtered.filter(h=>h.type==='recharge'||h.type==='credit');
     const collectifs=filtered.filter(h=>h.type==='debit'||h.type==='credit');
-
     const totalDebit=consos.reduce((s,h)=>s+h.amount,0)+debits.reduce((s,h)=>s+h.amount,0);
     const totalCredit=credits.reduce((s,h)=>s+h.amount,0);
-    const nbConsos=consos.reduce((s,h)=>{
-      const m=h.label.match(/×(\d+)/);return s+(m?parseInt(m[1]):1);
-    },0);
-
-    // Détail collectif : une ligne par opération avec commentaire
-    const detailLines=collectifs.map(h=>{
+    const nbConsos=consos.reduce((s,h)=>{const mx=h.label.match(/×(\d+)/);return s+(mx?parseInt(mx[1]):1);},0);
+    const detailCollectif=collectifs.map(h=>{
       const sign=h.type==='credit'?'+':'-';
-      const d=new Date(h.date);
-      const ds=d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+      const ds=new Date(h.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
       return `${ds} ${sign}${h.amount.toFixed(2)}€ — ${h.label}`;
-    });
-    const detailCollectif=detailLines.join(' // ');
-
-    recapData.push([
-      m.name,
-      m.balance||0,
-      -totalDebit,
-      totalCredit,
-      nbConsos,
-      collectifs.length,
-      detailCollectif||'—'
-    ]);
+    }).join(' // ');
+    recapData.push([m.name, m.balance||0, -totalDebit, totalCredit, nbConsos, collectifs.length, detailCollectif||'—']);
   });
-
-  // Ligne totaux
   recapData.push([]);
   const totBal=members.reduce((s,m)=>s+(m.balance||0),0);
   const totDeb=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='conso'||h.type==='debit').reduce((a,h)=>a+h.amount,0),0);
   const totCred=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='recharge'||h.type==='credit').reduce((a,h)=>a+h.amount,0),0);
-  const totConsos=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='conso').reduce((a,h)=>{
-    const match=h.label.match(/×(\d+)/);return a+(match?parseInt(match[1]):1);
-  },0),0);
+  const totConsos=members.reduce((s,m)=>s+filterHist(m.history||[]).filter(h=>h.type==='conso').reduce((a,h)=>{const mx=h.label.match(/×(\d+)/);return a+(mx?parseInt(mx[1]):1);},0),0);
   recapData.push(['TOTAL', totBal, -totDeb, totCred, totConsos, '', '']);
-
   const wsRecap=XLSX.utils.aoa_to_sheet(recapData);
   wsRecap['!cols']=[{wch:20},{wch:16},{wch:16},{wch:16},{wch:10},{wch:14},{wch:60}];
-  wsRecap['!merges']=[
-    {s:{r:0,c:0},e:{r:0,c:6}},
-    {s:{r:1,c:0},e:{r:1,c:6}},
-    {s:{r:2,c:0},e:{r:2,c:6}}
-  ];
-  // Forcer wrap text + hauteur sur colonne G pour chaque membre
+  wsRecap['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}},{s:{r:2,c:0},e:{r:2,c:6}}];
   wsRecap['!rows']=[];
   for(let i=5;i<5+members.length;i++){
     const addr=XLSX.utils.encode_cell({r:i,c:6});
     const cell=wsRecap[addr];
     if(cell){
-      // Recréer la cellule avec le bon type et le style wrapText
-      const lines=(cell.v||'').toString().split('\n');
-      wsRecap[addr]={
-        t:'s',
-        v:(cell.v||'').toString(),
-        s:{alignment:{wrapText:true,vertical:'top'}}
-      };
-      wsRecap['!rows'][i]={hpt:Math.max(20, lines.length*16)};
+      wsRecap[addr]={t:'s',v:(cell.v||'').toString(),s:{alignment:{wrapText:true,vertical:'top'}}};
+      wsRecap['!rows'][i]={hpt:Math.max(20,((cell.v||'').toString().split('\n').length)*16)};
     }
   }
-  XLSX.utils.book_append_sheet(wb, wsRecap, 'Récap');
+  XLSX.utils.book_append_sheet(wb, wsRecap, 'Récap membres');
 
-  // ══ FEUILLE 2 : HISTORIQUE GLOBAL ══
+  // ══ FEUILLE 2 : HISTORIQUE TRANSACTIONS ══
   const histData=[
     ['Bar des Vampires — Historique transactions'],
     ['Période : '+periodeLabel],
@@ -1340,39 +1076,93 @@ function exportExcel(){
       allTx.push([
         d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
         d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
-        m.name,
-        typeLabel[h.type]||h.type,
-        h.label,
-        isPos?h.amount:-h.amount,
-        isPos?'Crédit':'Débit'
+        m.name, typeLabel[h.type]||h.type, h.label,
+        isPos?h.amount:-h.amount, isPos?'Crédit':'Débit'
       ]);
     });
   });
-  allTx.sort((a,b)=>{
-    const da=a[0].split('/').reverse().join('-')+'T'+a[1];
-    const db=b[0].split('/').reverse().join('-')+'T'+b[1];
-    return new Date(db)-new Date(da);
-  });
+  allTx.sort((a,b)=>new Date(b[0].split('/').reverse().join('-')+'T'+b[1])-new Date(a[0].split('/').reverse().join('-')+'T'+a[1]));
   allTx.forEach(r=>histData.push(r));
   const wsHist=XLSX.utils.aoa_to_sheet(histData);
   wsHist['!cols']=[{wch:14},{wch:8},{wch:20},{wch:18},{wch:35},{wch:14},{wch:10}];
   wsHist['!merges']=[{s:{r:0,c:0},e:{r:0,c:6}},{s:{r:1,c:0},e:{r:1,c:6}}];
   XLSX.utils.book_append_sheet(wb, wsHist, 'Historique');
 
+  // ══ FEUILLE 3 : TRÉSORERIE ══
+  const t=getTreso();
+  const tresoData=[
+    ['Bar des Vampires — Trésorerie'],
+    ['Période : '+periodeLabel],
+    ['Généré le : '+dateStr(now)],
+    []
+  ];
+
+  // Récap soldes par compte
+  tresoData.push(['Compte','Solde actuel (€)','Entrées période (€)','Sorties période (€)','Nb mouvements']);
+  let tresoTotalBal=0, tresoTotalIn=0, tresoTotalOut=0;
+  TRESO_ACCOUNTS.forEach(a=>{
+    const acc=t[a.id]||{balance:0,history:[]};
+    const filtered=filterHist(acc.history||[]);
+    const entrees=filtered.filter(h=>h.amount>0).reduce((s,h)=>s+h.amount,0);
+    const sorties=filtered.filter(h=>h.amount<0).reduce((s,h)=>s+Math.abs(h.amount),0);
+    tresoTotalBal+=acc.balance||0;
+    tresoTotalIn+=entrees;
+    tresoTotalOut+=sorties;
+    tresoData.push([a.icon+' '+a.label, acc.balance||0, entrees, -sorties, filtered.length]);
+  });
+  tresoData.push([]);
+  tresoData.push(['TOTAL TRÉSORERIE', tresoTotalBal, tresoTotalIn, -tresoTotalOut, '']);
+  tresoData.push([]);
+  tresoData.push([]);
+
+  // Détail mouvements par compte
+  TRESO_ACCOUNTS.forEach(a=>{
+    const acc=t[a.id]||{balance:0,history:[]};
+    const filtered=filterHist(acc.history||[]).sort((x,y)=>new Date(y.date)-new Date(x.date));
+    if(!filtered.length)return;
+    tresoData.push([a.icon+' '+a.label+' — Détail mouvements']);
+    tresoData.push(['Date','Heure','Libellé','Commentaire','Montant (€)','Sens']);
+    filtered.forEach(h=>{
+      const d=new Date(h.date);
+      tresoData.push([
+        d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'}),
+        d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}),
+        h.label,
+        h.comment||'',
+        Math.abs(h.amount),
+        h.amount>0?'Entrée':'Sortie'
+      ]);
+    });
+    tresoData.push([]);
+  });
+
+  const wsTreso=XLSX.utils.aoa_to_sheet(tresoData);
+  wsTreso['!cols']=[{wch:22},{wch:10},{wch:30},{wch:28},{wch:14},{wch:10}];
+  XLSX.utils.book_append_sheet(wb, wsTreso, 'Trésorerie');
+
   // ── NOM FICHIER ──
   const slug=d=>dateStr(d).replace(/\//g,'-');
-  const filename=fromDate
-    ?`bar_vampires_${slug(fromDate)}_au_${slug(now)}.xlsx`
+  const filename=(fromDate||toDate)
+    ?`bar_vampires_${fromDate?slug(fromDate):'debut'}_au_${toDate?slug(toDate):slug(now)}.xlsx`
     :`bar_vampires_complet_${slug(now)}.xlsx`;
 
-  XLSX.writeFile(wb,filename);
+  XLSX.writeFile(wb, filename);
   ss('bar2_last_export', new Date().toISOString());
 
-  // Purge totale des historiques — soldes conservés
-  members.forEach(m=>{ m.history=[]; });
+  // ── PURGE HISTORIQUE MEMBRES sur la plage uniquement ──
+  members.forEach(m=>{
+    m.history=(m.history||[]).filter(h=>!inRange(h.date));
+  });
   saveM();
 
-  toast('Export téléchargé — historiques effacés','ok');
+  // ── PURGE HISTORIQUE TRÉSORERIE sur la plage uniquement ──
+  TRESO_ACCOUNTS.forEach(a=>{
+    if(t[a.id]?.history) t[a.id].history=t[a.id].history.filter(h=>!inRange(h.date));
+  });
+  saveTreso(t);
+
+  const rangeMsg=(fromDate||toDate)?`historique du ${periodeLabel} effacé`:`historiques effacés`;
+  toast(`Export téléchargé — ${rangeMsg}`,'ok');
   closeSheet();
   renderAdmin();
 }
@@ -1442,9 +1232,25 @@ function confirmImportConfig(){
 function openCentralClear(){
   document.getElementById('sheet-body').innerHTML=`
     <div class="sheet-title" style="color:var(--red)">⚠ CENTRAL CLEAR</div>
-    <div style="background:var(--red-d);border:1px solid var(--red);border-radius:var(--r);padding:16px;margin-bottom:20px;font-size:14px;line-height:1.7;color:var(--text)">
-      Êtes-vous sûr de vouloir remettre à zéro les portefeuilles de tous les participants et vider l'historique des opérations ?<br><br>
-      <span style="font-family:var(--mono);font-size:12px;color:var(--red)">⚠ Cette action est irréversible.</span>
+    <div style="background:var(--red-d);border:1px solid var(--red);border-radius:var(--r);padding:16px;margin-bottom:16px;font-size:14px;line-height:1.7;color:var(--text)">
+      Choisissez ce que vous souhaitez remettre à zéro :<br><br>
+      <span style="font-family:var(--mono);font-size:12px;color:var(--red)">⚠ Ces actions sont irréversibles.</span>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">
+      <label style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer">
+        <input type="checkbox" id="cc-members" checked style="width:16px;height:16px;accent-color:var(--red)">
+        <div>
+          <div style="font-size:13px;font-weight:500">Comptes membres</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">Remet tous les soldes à 0 et vide l'historique des transactions</div>
+        </div>
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;cursor:pointer">
+        <input type="checkbox" id="cc-treso" checked style="width:16px;height:16px;accent-color:var(--red)">
+        <div>
+          <div style="font-size:13px;font-weight:500">Trésorerie</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">Remet Banque, Lydia et Espèces à 0 et vide leur historique</div>
+        </div>
+      </label>
     </div>
     <button class="btn btn-red" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="openCentralClearPin()">OUI, CONTINUER</button>
     <button class="btn btn-ghost" style="width:100%;padding:12px" onclick="closeSheet()">Annuler</button>`;
@@ -1453,6 +1259,10 @@ function openCentralClear(){
 
 let ccPinBuf='';
 function openCentralClearPin(){
+  // Mémoriser les choix avant de passer à l'écran PIN
+  window._ccMembers = document.getElementById('cc-members')?.checked !== false;
+  window._ccTreso   = document.getElementById('cc-treso')?.checked !== false;
+  if(!window._ccMembers && !window._ccTreso) return toast('Sélectionne au moins une option','ko');
   ccPinBuf='';
   document.getElementById('sheet-body').innerHTML=`
     <div class="sheet-title" style="color:var(--red)">Confirme ton code admin</div>
@@ -1489,12 +1299,16 @@ function ccCheckPin(){
     setTimeout(()=>dots.forEach(d=>d.className='pin-dot'),600);
     return;
   }
-  // PIN correct → CENTRAL CLEAR
-  members.forEach(m=>{ m.balance=0; m.history=[]; });
-  saveM();
+  // PIN correct → CENTRAL CLEAR selon les cases cochées
+  const clearMembers = window._ccMembers !== false;
+  const clearTreso   = window._ccTreso   !== false;
+  let msg = [];
+  if(clearMembers){ members.forEach(m=>{ m.balance=0; m.history=[]; }); saveM(); msg.push('comptes membres'); }
+  if(clearTreso){ const t=getTreso(); TRESO_ACCOUNTS.forEach(a=>{ t[a.id]={balance:0,history:[]}; }); saveTreso(t); msg.push('trésorerie'); }
+  window._ccMembers=null; window._ccTreso=null;
   closeSheet();
   renderAdmin();
-  toast('CENTRAL CLEAR effectué — tous les comptes remis à zéro','ok');
+  toast('CENTRAL CLEAR — '+msg.join(' + ')+' remis à zéro','ok');
 }
 
 function openSheet(){
@@ -1511,7 +1325,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.5.0';
+const APP_VERSION = '1.6.0';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1549,6 +1363,272 @@ function showUpdateBanner(newVersion=''){
   b.innerHTML=`<span style="font-size:13px;color:#4ade80">🔄 Nouvelle version${newVersion?' '+newVersion:''} disponible</span>
     <button onclick="window.location.reload(true)" style="background:#4ade80;color:#000;border:none;border-radius:6px;padding:6px 14px;font-family:inherit;font-size:12px;cursor:pointer;font-weight:500">Mettre à jour</button>`;
   document.body.prepend(b);
+}
+
+// ════════════════════════════════════
+// TRÉSORERIE
+// ════════════════════════════════════
+
+const TRESO_ACCOUNTS = [
+  { id: 'banque',   label: 'Banque',    icon: '🏦' },
+  { id: 'lydia',    label: 'Lydia',     icon: '📱' },
+  { id: 'especes',  label: 'Espèces',   icon: '💵' },
+];
+
+function getTreso() {
+  return ls('bar2_treso', { banque: { balance: 0, history: [] }, lydia: { balance: 0, history: [] }, especes: { balance: 0, history: [] } });
+}
+function saveTreso(t) { ss('bar2_treso', t); }
+
+function renderTresoPreview() {
+  const t = getTreso();
+  const el = document.getElementById('tresorerie-preview');
+  if (!el) return;
+  const total = TRESO_ACCOUNTS.reduce((s, a) => s + (t[a.id]?.balance || 0), 0);
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      ${TRESO_ACCOUNTS.map(a => {
+        const b = t[a.id]?.balance || 0;
+        const cls = b > 0 ? 'var(--green)' : b < 0 ? 'var(--red)' : 'var(--muted)';
+        return `<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px 8px;text-align:center">
+          <div style="font-size:18px;margin-bottom:4px">${a.icon}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">${a.label.toUpperCase()}</div>
+          <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${cls}">${b >= 0 ? '+' : ''}${b.toFixed(2)} €</div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid var(--border)">
+      <span style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px">TOTAL TRÉSORERIE</span>
+      <span style="font-family:var(--mono);font-size:15px;font-weight:500;color:${total >= 0 ? 'var(--green)' : 'var(--red)'}">${total >= 0 ? '+' : ''}${total.toFixed(2)} €</span>
+    </div>`;
+}
+
+function openTresorerie() {
+  const t = getTreso();
+  const total = TRESO_ACCOUNTS.reduce((s, a) => s + (t[a.id]?.balance || 0), 0);
+
+  document.getElementById('sheet-body').innerHTML = `
+    <div class="sheet-title">Trésorerie</div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px">
+      ${TRESO_ACCOUNTS.map(a => {
+        const b = t[a.id]?.balance || 0;
+        const cls = b > 0 ? 'var(--green)' : b < 0 ? 'var(--red)' : 'var(--muted)';
+        return `<div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 8px;text-align:center;cursor:pointer;transition:border-color .15s" onclick="openTresoMove('${a.id}')" onmouseenter="this.style.borderColor='var(--amber)'" onmouseleave="this.style.borderColor='var(--border)'">
+          <div style="font-size:22px;margin-bottom:6px">${a.icon}</div>
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">${a.label.toUpperCase()}</div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:500;color:${cls}">${b >= 0 ? '+' : ''}${b.toFixed(2)} €</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--amber);margin-top:6px;letter-spacing:1px">+ MOUVEMENT</div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 16px;margin-bottom:20px">
+      <span style="font-family:var(--mono);font-size:12px;color:var(--muted);letter-spacing:2px">TOTAL</span>
+      <span style="font-family:var(--display);font-size:22px;font-weight:800;color:${total >= 0 ? 'var(--green)' : 'var(--red)'}">${total >= 0 ? '+' : ''}${total.toFixed(2)} €</span>
+    </div>
+
+    <!-- Initialisation des soldes -->
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:20px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleTresoInit()">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:1px">⚙ INITIALISER LES SOLDES</div>
+        <div id="treso-init-arrow" style="font-family:var(--mono);font-size:13px;color:var(--muted);transition:transform .2s">▸</div>
+      </div>
+      <div id="treso-init-panel" style="display:none;margin-top:14px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-bottom:12px;line-height:1.6">Définit le solde de départ de chaque compte. L'historique est conservé.</div>
+        ${TRESO_ACCOUNTS.map(a => `
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+          <div style="font-size:18px">${a.icon}</div>
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted);width:60px">${a.label}</div>
+          <input id="init-${a.id}" type="number" step="0.5" placeholder="${(t[a.id]?.balance||0).toFixed(2)}" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
+        </div>`).join('')}
+        <button class="btn btn-amber" style="width:100%;padding:11px;margin-top:4px;font-size:12px;letter-spacing:1px" onclick="saveTresoInit()">VALIDER L'INITIALISATION</button>
+      </div>
+    </div>
+
+    <div style="margin-bottom:20px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Virement interne</div>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:8px">
+        <select id="treso-from" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+          ${TRESO_ACCOUNTS.map(a => `<option value="${a.id}">${a.icon} ${a.label}</option>`).join('')}
+        </select>
+        <div style="font-family:var(--mono);font-size:14px;color:var(--muted)">→</div>
+        <select id="treso-to" style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:10px;color:var(--text);font-family:var(--mono);font-size:12px;outline:none">
+          ${TRESO_ACCOUNTS.map((a, i) => `<option value="${a.id}"${i === 1 ? ' selected' : ''}>${a.icon} ${a.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <input id="treso-vir-amount" type="number" step="0.5" min="0.1" placeholder="Montant (€)">
+      </div>
+      <div class="field" style="margin-bottom:8px">
+        <input id="treso-vir-comment" type="text" placeholder="Motif (optionnel)">
+      </div>
+      <button class="btn btn-ghost" style="width:100%;padding:11px;border-color:var(--amber);color:var(--amber);font-size:12px;letter-spacing:1px" onclick="saveTresoVirement()">↔ VALIDER LE VIREMENT</button>
+    </div>
+
+    <div>
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:10px">Historique récent</div>
+      <div id="treso-hist-list">${renderTresoHistHTML()}</div>
+    </div>`;
+
+  openSheet();
+}
+
+function renderTresoHistHTML() {
+  const t = getTreso();
+  const all = [];
+  TRESO_ACCOUNTS.forEach(a => {
+    (t[a.id]?.history || []).forEach(h => all.push({ ...h, accountId: a.id, accountLabel: a.label, accountIcon: a.icon }));
+  });
+  all.sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (!all.length) return `<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">Aucun mouvement</div>`;
+  return all.slice(0, 30).map(h => {
+    const isPos = h.amount > 0;
+    const d = new Date(h.date);
+    const ds = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    return `<div class="hist-item">
+      <div class="hist-dot" style="background:${isPos ? 'var(--green)' : 'var(--red)'}"></div>
+      <div class="hist-info">
+        <div class="hist-label">${h.accountIcon} ${h.accountLabel} — ${h.label}</div>
+        <div class="hist-date">${ds}</div>
+      </div>
+      <div class="hist-amount ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${h.amount.toFixed(2)} €</div>
+    </div>`;
+  }).join('');
+}
+
+function openTresoMove(accountId) {
+  const a = TRESO_ACCOUNTS.find(x => x.id === accountId);
+  const t = getTreso();
+  const b = t[accountId]?.balance || 0;
+  const memberOptions = members.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+  document.getElementById('sheet-body').innerHTML = `
+    <div class="sheet-title">${a.icon} ${a.label}</div>
+    <div style="font-family:var(--mono);font-size:13px;color:${b >= 0 ? 'var(--green)' : 'var(--red)'};margin-bottom:20px">Solde actuel : ${b >= 0 ? '+' : ''}${b.toFixed(2)} €</div>
+    <div class="field">
+      <label>Montant (€)</label>
+      <input id="tm-amount" type="number" step="0.5" min="0.01" placeholder="0.00">
+      <div class="quick-row">
+        ${[5, 10, 20, 50].map(v => `<div class="q-btn" onclick="document.getElementById('tm-amount').value=${v}">${v} €</div>`).join('')}
+      </div>
+    </div>
+    <div class="field">
+      <label>Libellé</label>
+      <input id="tm-label" type="text" placeholder="ex : Cotisations reçues, Achat bières…">
+    </div>
+
+    <!-- Toggle recharge membre -->
+    <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:14px">
+      <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleTresoRecharge()">
+        <div style="font-family:var(--mono);font-size:11px;color:var(--amber);letter-spacing:1px">🔄 RECHARGE D'UN MEMBRE</div>
+        <div id="treso-recharge-arrow" style="font-family:var(--mono);font-size:13px;color:var(--muted);transition:transform .2s">▸</div>
+      </div>
+      <div id="treso-recharge-panel" style="display:none;margin-top:12px">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:6px">MEMBRE À RECHARGER</div>
+        <select id="tm-member" style="width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:11px 14px;color:var(--text);font-family:var(--sans);font-size:14px;outline:none;margin-bottom:0">
+          <option value="">— Choisir un membre —</option>
+          ${memberOptions}
+        </select>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:8px;line-height:1.6">Le montant sera crédité sur son compte avec le libellé "Recharge (${a.label})".</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px">
+      <button class="btn btn-green" style="padding:14px;font-size:13px" onclick="saveTresoMove('${accountId}',1)">+ ENTRÉE</button>
+      <button class="btn btn-red" style="padding:14px;font-size:13px" onclick="saveTresoMove('${accountId}',-1)">− SORTIE</button>
+    </div>
+    <button class="btn btn-ghost" style="width:100%;padding:11px;margin-top:10px;font-size:11px" onclick="openTresorerie()">← Retour</button>`;
+}
+
+function toggleTresoRecharge() {
+  const panel = document.getElementById('treso-recharge-panel');
+  const arrow = document.getElementById('treso-recharge-arrow');
+  const open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function saveTresoMove(accountId, sign) {
+  const amount = parseFloat(document.getElementById('tm-amount').value);
+  const label = document.getElementById('tm-label').value.trim() || (sign > 0 ? 'Entrée' : 'Sortie');
+  if (!amount || amount <= 0) return toast('Montant invalide', 'ko');
+
+  let comment = '';
+
+  // Recharge membre si activée
+  const panel = document.getElementById('treso-recharge-panel');
+  const memberSel = document.getElementById('tm-member');
+  if (panel && panel.style.display !== 'none' && memberSel && memberSel.value) {
+    if (sign < 0) return toast('La recharge membre ne s\'applique qu\'à une entrée', 'ko');
+    const memberId = memberSel.value;
+    const a = TRESO_ACCOUNTS.find(x => x.id === accountId);
+    const memberName = members.find(m => m.id === memberId)?.name || '';
+    comment = `Recharge ${memberName}`;
+    addTx(memberId, 'recharge', `Recharge (${a.label})`, amount);
+    renderHome();
+    renderAdmin();
+  }
+
+  const t = getTreso();
+  if (!t[accountId]) t[accountId] = { balance: 0, history: [] };
+  t[accountId].balance = Math.round((t[accountId].balance + sign * amount) * 100) / 100;
+  t[accountId].history.unshift({ id: Date.now(), date: new Date().toISOString(), label, comment, amount: sign * amount });
+  if (t[accountId].history.length > 100) t[accountId].history.length = 100;
+  saveTreso(t);
+  toast((sign > 0 ? '+' : '-') + amount.toFixed(2) + ' € enregistré', 'ok');
+  renderTresoPreview();
+  openTresorerie();
+}
+
+function toggleTresoInit() {
+  const panel = document.getElementById('treso-init-panel');
+  const arrow = document.getElementById('treso-init-arrow');
+  const open = panel.style.display === 'none';
+  panel.style.display = open ? 'block' : 'none';
+  arrow.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+function saveTresoInit() {
+  const t = getTreso();
+  let changed = false;
+  TRESO_ACCOUNTS.forEach(a => {
+    const val = document.getElementById('init-'+a.id)?.value;
+    if (val === '' || val === null || val === undefined) return;
+    const amount = parseFloat(val);
+    if (isNaN(amount)) return;
+    const prev = t[a.id]?.balance || 0;
+    if (!t[a.id]) t[a.id] = { balance: 0, history: [] };
+    t[a.id].balance = Math.round(amount * 100) / 100;
+    // Enregistrer l'init dans l'historique
+    t[a.id].history.unshift({ id: Date.now(), date: new Date().toISOString(), label: 'Solde initial', comment: `(était ${prev.toFixed(2)} €)`, amount: Math.round((amount - prev) * 100) / 100 });
+    changed = true;
+  });
+  if (!changed) return toast('Aucune valeur saisie', 'ko');
+  saveTreso(t);
+  toast('Soldes initialisés', 'ok');
+  renderTresoPreview();
+  openTresorerie();
+}
+
+function saveTresoVirement() {
+  const fromId = document.getElementById('treso-from').value;
+  const toId = document.getElementById('treso-to').value;
+  const amount = parseFloat(document.getElementById('treso-vir-amount').value);
+  const comment = document.getElementById('treso-vir-comment').value.trim();
+  if (fromId === toId) return toast('Comptes identiques', 'ko');
+  if (!amount || amount <= 0) return toast('Montant invalide', 'ko');
+  const fromA = TRESO_ACCOUNTS.find(a => a.id === fromId);
+  const toA = TRESO_ACCOUNTS.find(a => a.id === toId);
+  const label = comment || `Virement ${fromA.label} → ${toA.label}`;
+  const t = getTreso();
+  t[fromId].balance = Math.round((t[fromId].balance - amount) * 100) / 100;
+  t[fromId].history.unshift({ id: Date.now(), date: new Date().toISOString(), label, comment: comment||'', amount: -amount });
+  t[toId].balance = Math.round((t[toId].balance + amount) * 100) / 100;
+  t[toId].history.unshift({ id: Date.now() + 1, date: new Date().toISOString(), label, comment: comment||'', amount: amount });
+  saveTreso(t);
+  toast(`Virement de ${amount.toFixed(2)} € effectué`, 'ok');
+  renderTresoPreview();
+  openTresorerie();
 }
 
 renderHome();
