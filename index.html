@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -140,7 +139,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 <body>
 
 <!-- HOME -->
-
 <div id="s-home" class="screen active">
   <div class="topbar">
     <div class="logo">Bar des Vampires<sub id="logo-version"></sub></div>
@@ -156,8 +154,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
 </div>
 
-<!-- DASHBOARD MEMBRE -->
 
+<!-- DASHBOARD MEMBRE -->
 <div id="s-dash" class="screen">
   <div class="topbar">
     <div class="logo" id="dash-topbar-name" style="font-size:20px"></div>
@@ -165,42 +163,41 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
   <div class="dash-body">
 
-```
-<!-- Solde + récap fusionnés dans une seule carte stable -->
-<div class="balance-card" style="overflow:visible">
-  <div class="balance-label">Mon solde</div>
-  <div class="balance-value" id="dash-balance">0,00 €</div>
-  <div class="balance-sub" id="dash-name-sub"></div>
-  <!-- Compteur inline, toujours présent pour éviter tout décalage -->
-  <div id="conso-recap" style="visibility:hidden;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)"><span id="recap-count">0</span> conso<span id="recap-plural"></span></div>
-    <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--amber)" id="recap-total">0,00 €</div>
-  </div>
-</div>
 
-<div>
-  <div class="section-label" style="margin-bottom:10px">Consommer</div>
-  <div class="conso-btn" onclick="addConso()" style="width:100%;padding:28px 14px">
-    <div class="conso-icon">✕</div>
-    <div class="conso-label">1 conso</div>
-    <div class="conso-price" id="conso-tick-price">0,60 €</div>
-  </div>
-</div>
+    <!-- Solde + récap fusionnés dans une seule carte stable -->
+    <div class="balance-card" style="overflow:visible">
+      <div class="balance-label">Mon solde</div>
+      <div class="balance-value" id="dash-balance">0,00 €</div>
+      <div class="balance-sub" id="dash-name-sub"></div>
+      <!-- Compteur inline, toujours présent pour éviter tout décalage -->
+      <div id="conso-recap" style="visibility:hidden;margin-top:12px;border-top:1px solid var(--border);padding-top:12px;display:flex;align-items:center;justify-content:space-between">
+        <div style="font-family:var(--display);font-size:20px;font-weight:800;color:var(--text)"><span id="recap-count">0</span> conso<span id="recap-plural"></span></div>
+        <div style="font-family:var(--mono);font-size:18px;font-weight:500;color:var(--amber)" id="recap-total">0,00 €</div>
+      </div>
+    </div>
 
-<div>
-  <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
-  <div class="logout-hint">Déconnexion auto dans <span id="timer-sec">15</span>s</div>
-</div>
-<div>
-  <div class="section-label" style="margin-bottom:8px">Dernières transactions</div>
-  <div class="history-list" id="dash-history"></div>
-</div>
-```
+    <div>
+      <div class="section-label" style="margin-bottom:10px">Consommer</div>
+      <div class="conso-btn" onclick="addConso()" style="width:100%;padding:28px 14px">
+        <div class="conso-icon">✕</div>
+        <div class="conso-label">1 conso</div>
+        <div class="conso-price" id="conso-tick-price">0,70 €</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="logout-hint">Déconnexion auto dans <span id="timer-sec">15</span>s</div>
+    </div>
+    <div>
+      <div class="section-label" style="margin-bottom:8px">Dernières transactions</div>
+      <div class="history-list" id="dash-history"></div>
+    </div>
+
 
   </div>
 
   <!-- Barre fixe ANNULER / VALIDER en bas -->
-
   <div id="conso-action-bar" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--s1);border-top:1px solid var(--border);padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
     <button class="btn btn-red" style="padding:16px;font-size:15px;width:100%" onclick="resetConso()">✕ ANNULER</button>
     <button class="btn btn-green" style="padding:16px;font-size:15px;width:100%" onclick="validerConso()">✓ VALIDER</button>
@@ -209,7 +206,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 </div>
 
 <!-- PIN ADMIN -->
-
 <div id="s-admin-pin" class="screen">
   <div class="topbar">
     <div class="logo">Bar<sub>asso</sub></div>
@@ -234,7 +230,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 </div>
 
 <!-- ADMIN -->
-
 <div id="s-admin" class="screen">
   <div class="topbar">
     <div class="logo">Bar des Vampires<sub id="logo-version-admin"></sub></div>
@@ -242,148 +237,145 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   </div>
   <div class="admin-body">
 
-```
-<!-- Alerte export -->
-<div id="export-alert" style="display:none;background:#1a0d00;border:1px solid var(--amber);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
-  <span style="font-size:22px;flex-shrink:0">⚠️</span>
-  <div style="flex:1">
-    <div style="font-size:13px;font-weight:500;color:var(--amber)" id="export-alert-msg">Aucune sauvegarde récente</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">Pense à exporter un fichier Excel pour la comptabilité</div>
-  </div>
-  <button class="btn btn-ghost btn-sm" style="border-color:var(--amber);color:var(--amber);white-space:nowrap" onclick="openExportSheet()">↓ Exporter</button>
-</div>
-
-<!-- Bouton Export Excel -->
-<div style="display:flex;justify-content:center">
-  <button onclick="openExportSheet()" style="width:50%;background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:2px;color:#4ab8e8;cursor:pointer;transition:all .15s;text-transform:uppercase" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">↓ Export Excel</button>
-</div>
-
-<div class="card">
-  <div class="card-head" onclick="toggleRecapCard()" style="cursor:pointer;user-select:none">
-    <div class="card-title">Récap comptes</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div onclick="event.stopPropagation();toggleSelectAll()" style="display:flex;align-items:center;gap:6px;cursor:pointer">
-        <div id="select-all-check" class="recap-check" style="width:20px;height:20px"></div>
-        <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px">TOUS</span>
+    <!-- Alerte export -->
+    <div id="export-alert" style="display:none;background:#1a0d00;border:1px solid var(--amber);border-radius:var(--r);padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <span style="font-size:22px;flex-shrink:0">⚠️</span>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:500;color:var(--amber)" id="export-alert-msg">Aucune sauvegarde récente</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px">Pense à exporter un fichier Excel pour la comptabilité</div>
       </div>
-      <span id="recap-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+      <button class="btn btn-ghost btn-sm" style="border-color:var(--amber);color:var(--amber);white-space:nowrap" onclick="openExportSheet()">↓ Exporter</button>
     </div>
-  </div>
-  <div id="recap-collapsible" style="display:none">
-    <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
-      <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
-      <div id="admin-debts-total" style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red)"></div>
+
+    <!-- Bouton Export Excel -->
+    <div style="display:flex;justify-content:center">
+      <button onclick="openExportSheet()" style="width:50%;background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:12px;font-family:var(--mono);font-size:12px;font-weight:500;letter-spacing:2px;color:#4ab8e8;cursor:pointer;transition:all .15s;text-transform:uppercase" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">↓ Export Excel</button>
     </div>
-    <div class="card-body" id="admin-recap"></div>
-  </div>
-</div>
 
-<div class="card">
-  <div class="card-head"><div class="card-title">Action groupée (membres cochés)</div></div>
-  <div class="card-body" style="padding:14px 16px">
-    <div class="field">
-      <label>Montant (€)</label>
-      <input id="bulk-amount" type="number" step="0.1" min="0.1" placeholder="ex : 5.00">
+    <div class="card">
+      <div class="card-head" onclick="toggleRecapCard()" style="cursor:pointer;user-select:none">
+        <div class="card-title">Récap comptes</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div onclick="event.stopPropagation();toggleSelectAll()" style="display:flex;align-items:center;gap:6px;cursor:pointer">
+            <div id="select-all-check" class="recap-check" style="width:20px;height:20px"></div>
+            <span style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:1px">TOUS</span>
+          </div>
+          <span id="recap-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+        </div>
+      </div>
+      <div id="recap-collapsible" style="display:none">
+        <div id="admin-debts-summary" style="display:none;padding:10px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+          <div style="font-family:var(--mono);font-size:11px;color:var(--muted)">Caisse</div>
+          <div id="admin-debts-total" style="font-family:var(--mono);font-size:14px;font-weight:500;color:var(--red)"></div>
+        </div>
+        <div class="card-body" id="admin-recap"></div>
+      </div>
     </div>
-    <div class="field">
-      <label>Commentaire (optionnel)</label>
-      <input id="bulk-comment" type="text" placeholder="ex : Sortie karting, Cotisation…">
+
+    <div class="card">
+      <div class="card-head"><div class="card-title">Action groupée (membres cochés)</div></div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="field">
+          <label>Montant (€)</label>
+          <input id="bulk-amount" type="number" step="0.1" min="0.1" placeholder="ex : 5.00">
+        </div>
+        <div class="field">
+          <label>Commentaire (optionnel)</label>
+          <input id="bulk-comment" type="text" placeholder="ex : Sortie karting, Cotisation…">
+        </div>
+        <div id="bulk-sel-count" class="section-label" style="margin-bottom:10px">0 membre(s) sélectionné(s)</div>
+        <div class="row">
+          <button class="btn btn-green flex1" onclick="bulkAction('add')">+ Créditer</button>
+          <button class="btn btn-red flex1" onclick="bulkAction('sub')">− Débiter</button>
+        </div>
+      </div>
     </div>
-    <div id="bulk-sel-count" class="section-label" style="margin-bottom:10px">0 membre(s) sélectionné(s)</div>
-    <div class="row">
-      <button class="btn btn-green flex1" onclick="bulkAction('add')">+ Créditer</button>
-      <button class="btn btn-red flex1" onclick="bulkAction('sub')">− Débiter</button>
+
+
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">☕ Cotiz Café</div>
+        <button onclick="openCotizCafe()" style="background:linear-gradient(135deg,#1a0f00,#2a1800);border:1px solid var(--amber);border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:var(--amber);cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#2a1800'" onmouseleave="this.style.background='linear-gradient(135deg,#1a0f00,#2a1800)'">☕ Appliquer</button>
+      </div>
+      <div class="card-body" style="padding:10px 16px" id="cotiz-cafe-preview"></div>
     </div>
-  </div>
-</div>
 
-
-<div class="card">
-  <div class="card-head">
-    <div class="card-title">☕ Cotiz Café</div>
-    <button onclick="openCotizCafe()" style="background:linear-gradient(135deg,#1a0f00,#2a1800);border:1px solid var(--amber);border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:var(--amber);cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#2a1800'" onmouseleave="this.style.background='linear-gradient(135deg,#1a0f00,#2a1800)'">☕ Appliquer</button>
-  </div>
-  <div class="card-body" style="padding:10px 16px" id="cotiz-cafe-preview"></div>
-</div>
-
-<!-- TRÉSORERIE -->
-<div class="card">
-  <div class="card-head">
-    <div class="card-title">Trésorerie</div>
-    <button onclick="openTresorerie()" style="background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:#4ab8e8;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">📊 Gérer</button>
-  </div>
-  <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
-</div>
-
-<div class="card">
-  <div class="card-head" onclick="toggleMembersCard()" style="cursor:pointer;user-select:none">
-    <div class="card-title">Membres</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openAddMember()">+ Ajouter</button>
-      <span id="members-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+    <!-- TRÉSORERIE -->
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Trésorerie</div>
+        <button onclick="openTresorerie()" style="background:linear-gradient(135deg,#001a2a,#001020);border:1px solid #4ab8e8;border-radius:var(--r-sm);padding:7px 14px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:1px;color:#4ab8e8;cursor:pointer;transition:all .15s" onmouseenter="this.style.background='#001a2a'" onmouseleave="this.style.background='linear-gradient(135deg,#001a2a,#001020)'">📊 Gérer</button>
+      </div>
+      <div class="card-body" style="padding:12px 16px" id="tresorerie-preview"></div>
     </div>
-  </div>
-  <div id="admin-members" class="card-body" style="display:none"></div>
-</div>
 
-
-<div class="card">
-  <div class="card-head" onclick="toggleHistCard()" style="cursor:pointer;user-select:none">
-    <div class="card-title">Historique global</div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
-      <span id="hist-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+    <div class="card">
+      <div class="card-head" onclick="toggleMembersCard()" style="cursor:pointer;user-select:none">
+        <div class="card-title">Membres</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button class="btn btn-green btn-sm" onclick="event.stopPropagation();openAddMember()">+ Ajouter</button>
+          <span id="members-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+        </div>
+      </div>
+      <div id="admin-members" class="card-body" style="display:none"></div>
     </div>
-  </div>
-  <div id="admin-global-hist" class="card-body" style="display:none"></div>
-</div>
 
-<div class="card">
-  <div class="card-head">
-    <div class="card-title">Paramètres</div>
-    <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">v<span id="admin-version"></span></div>
-  </div>
-  <div class="card-body" style="padding:14px 16px">
-    <div class="field">
-      <label>Prix d'une croix (€)</label>
-      <input id="tick-value" type="number" step="0.05" min="0.05" placeholder="0.60">
-      <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Valeur actuelle : <span id="tick-current"></span></div>
+
+    <div class="card">
+      <div class="card-head" onclick="toggleHistCard()" style="cursor:pointer;user-select:none">
+        <div class="card-title">Historique global</div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted)" id="admin-hist-count"></div>
+          <span id="hist-chevron" style="color:var(--muted);font-size:16px;transition:transform .25s;display:inline-block">▾</span>
+        </div>
+      </div>
+      <div id="admin-global-hist" class="card-body" style="display:none"></div>
     </div>
-    <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
-    <div style="height:1px;background:var(--border);margin:16px 0"></div>
-    <div class="section-label" style="margin-bottom:10px">Sauvegarde & restauration</div>
-    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">La config est exportée automatiquement à chaque export Excel. Pour restaurer :</div>
-    <button class="btn btn-ghost" style="width:100%;padding:12px;font-size:11px;letter-spacing:1px;border-color:var(--amber);color:var(--amber)" onclick="document.getElementById('import-config-input').click()">↑ IMPORTER CONFIG</button>
-    <input type="file" id="import-config-input" accept=".json" style="display:none" onchange="importConfig(event)">
-  </div>
-</div>
 
-<!-- CENTRAL CLEAR -->
-<div style="padding:8px 0 24px">
-  <button onclick="openCentralClear()" style="
-    width:100%;
-    background:var(--red-d);
-    border:2px solid var(--red);
-    border-radius:var(--r);
-    padding:18px;
-    font-family:var(--mono);
-    font-size:14px;
-    font-weight:500;
-    letter-spacing:3px;
-    color:var(--red);
-    cursor:pointer;
-    transition:all .2s;
-    text-transform:uppercase;
-    animation: pulse-red 2s infinite;
-  ">⚠ CENTRAL CLEAR ⚠</button>
-</div>
-```
+    <div class="card">
+      <div class="card-head">
+        <div class="card-title">Paramètres</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted)">v<span id="admin-version"></span></div>
+      </div>
+      <div class="card-body" style="padding:14px 16px">
+        <div class="field">
+          <label>Prix d'une croix (€)</label>
+          <input id="tick-value" type="number" step="0.05" min="0.05" placeholder="0.70">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Valeur actuelle : <span id="tick-current"></span></div>
+        </div>
+        <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
+        <div style="height:1px;background:var(--border);margin:16px 0"></div>
+        <div class="section-label" style="margin-bottom:10px">Sauvegarde & restauration</div>
+        <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:12px;line-height:1.6">La config est exportée automatiquement à chaque export Excel. Pour restaurer :</div>
+        <button class="btn btn-ghost" style="width:100%;padding:12px;font-size:11px;letter-spacing:1px;border-color:var(--amber);color:var(--amber)" onclick="document.getElementById('import-config-input').click()">↑ IMPORTER CONFIG</button>
+        <input type="file" id="import-config-input" accept=".json" style="display:none" onchange="importConfig(event)">
+      </div>
+    </div>
+
+    <!-- CENTRAL CLEAR -->
+    <div style="padding:8px 0 24px">
+      <button onclick="openCentralClear()" style="
+        width:100%;
+        background:var(--red-d);
+        border:2px solid var(--red);
+        border-radius:var(--r);
+        padding:18px;
+        font-family:var(--mono);
+        font-size:14px;
+        font-weight:500;
+        letter-spacing:3px;
+        color:var(--red);
+        cursor:pointer;
+        transition:all .2s;
+        text-transform:uppercase;
+        animation: pulse-red 2s infinite;
+      ">⚠ CENTRAL CLEAR ⚠</button>
+    </div>
 
   </div>
 </div>
 
 <!-- SHEET -->
-
 <div class="overlay" id="overlay" onclick="overlayClick(event)">
   <div class="sheet" id="sheet">
     <button class="sheet-close" onclick="closeSheet()">×</button>
@@ -395,7 +387,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 
 <script>
 const ADMIN_PIN='6665'; // ← CHANGER AVANT DÉPLOIEMENT
-const DEFAULT_TICK=0.60;
+const DEFAULT_TICK=0.70;
 function getTick(){return parseFloat(ls('bar2_tick',DEFAULT_TICK))||DEFAULT_TICK;}
 const AUTO_LOGOUT=10;
 
@@ -985,6 +977,10 @@ function openAdminMember(id){
     <!-- Débit admin -->
     <div style="background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px">
       <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--amber);text-transform:uppercase;margin-bottom:10px">− Enregistrer une dépense</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+        ${[{l:'🚬 Clope',p:''},{l:'👕 T-shirt',p:''},{l:'🩹 Patch',p:''},{l:'🎁 Goodies',p:''}].map(item=>`
+        <button onclick="setAdminDebitItem('${id}','${item.l.replace(/^\S+\s/,'')}','${item.p}')" style="background:linear-gradient(135deg,var(--s3),var(--s2));border:1px solid var(--amber);border-radius:var(--r-sm);padding:9px 14px;font-family:var(--mono);font-size:12px;font-weight:500;color:var(--amber);cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;letter-spacing:.5px" onmouseenter="this.style.background='var(--s3)';this.style.color='var(--amber2)'" onmouseleave="this.style.background='linear-gradient(135deg,var(--s3),var(--s2))';this.style.color='var(--amber)'">${item.l}</button>`).join('')}
+      </div>
       <div class="field" style="margin-bottom:10px">
         <label>Objet</label>
         <input id="adm-debit-label-${id}" type="text" placeholder="ex : Bière, Repas, Karting…">
@@ -999,6 +995,14 @@ function openAdminMember(id){
     <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Historique (${hist.length} opérations)</div>
     <div id="admin-member-hist">${histHTML}</div>`;
   openSheet();
+}
+
+function setAdminDebitItem(id, label, price){
+  const labelEl=document.getElementById('adm-debit-label-'+id);
+  const amountEl=document.getElementById('adm-debit-amount-'+id);
+  if(labelEl) labelEl.value=label;
+  if(amountEl && price) amountEl.value=price;
+  if(amountEl && !price) amountEl.focus();
 }
 
 function saveAdminDebit(id){
@@ -1607,7 +1611,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '1.9.8';
+const APP_VERSION = '2.0.2';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1913,6 +1917,5 @@ function saveTresoVirement() {
 
 renderHome();
 </script>
-
 </body>
 </html>
