@@ -1,4 +1,4 @@
-const VERSION = '2.0.5';
+const VERSION = '2.0.6';
 const CACHE = 'bar-vampires-' + VERSION;
 const FILES = ['./', './index.html', './manifest.json', './icon-512.png'];
 

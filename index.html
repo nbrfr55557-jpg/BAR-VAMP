@@ -277,7 +277,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="card-body" style="padding:14px 16px">
         <div class="field">
           <label>Montant (€)</label>
-          <input id="bulk-amount" type="number" step="0.1" min="0.1" placeholder="ex : 5.00">
+          <input id="bulk-amount" type="number" inputmode="decimal" step="0.1" min="0.1" placeholder="ex : 5.00">
         </div>
         <div class="field">
           <label>Commentaire (optionnel)</label>
@@ -340,7 +340,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
       <div class="card-body" style="padding:14px 16px">
         <div class="field">
           <label>Prix d'une croix (€)</label>
-          <input id="tick-value" type="number" step="0.05" min="0.05" placeholder="0.70">
+          <input id="tick-value" type="number" inputmode="decimal" step="0.05" min="0.05" placeholder="0.70">
           <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:6px">Valeur actuelle : <span id="tick-current"></span></div>
         </div>
         <button class="btn btn-amber" onclick="saveTick()">ENREGISTRER</button>
@@ -811,7 +811,7 @@ function openCotizCafe(){
 
     <div class="field">
       <label>Montant de la cotiz (€)</label>
-      <input id="cafe-amount" type="number" step="0.5" min="0.5" placeholder="ex : 5.00">
+      <input id="cafe-amount" type="number" inputmode="decimal" step="0.5" min="0.5" placeholder="ex : 5.00">
     </div>
 
     <!-- Non-buveurs permanents (déroulant) -->
@@ -987,7 +987,7 @@ function openAdminMember(id){
       </div>
       <div class="field" style="margin-bottom:10px">
         <label>Montant (€)</label>
-        <input id="adm-debit-amount-${id}" type="number" step="0.1" min="0.1" placeholder="0.00">
+        <input id="adm-debit-amount-${id}" type="number" inputmode="decimal" step="0.1" min="0.1" placeholder="0.00">
       </div>
       <button class="btn btn-red" style="width:100%;padding:12px;font-size:13px" onclick="saveAdminDebit('${id}')">− DÉBITER</button>
     </div>
@@ -1112,7 +1112,7 @@ function openInitMember(id){
     </div>
     <div class="field">
       <label>Solde initial (€)</label>
-      <input id="init-amount" type="number" step="0.5" placeholder="ex : 10.00 ou -5.00" value="${m.balance||''}">
+      <input id="init-amount" type="number" inputmode="decimal" step="0.5" placeholder="ex : 10.00 ou -5.00" value="${m.balance||''}">
     </div>
     <button class="btn btn-amber" onclick="saveInitMember('${id}')">ENREGISTRER</button>`;
   openSheet();
@@ -1143,7 +1143,7 @@ function openAddMember(){
     <div class="sheet-title">Nouveau membre</div>
     <div class="field"><label>Prénom / Nom</label><input id="nm-name" type="text" placeholder="Ex : Jean Dupont"></div>
     <div class="field"><label>PIN à 4 chiffres</label><input id="nm-pin" type="password" maxlength="4" inputmode="numeric" placeholder="0000"></div>
-    <div class="field"><label>Solde initial (€)</label><input id="nm-bal" type="number" step="0.5" value="0"></div>
+    <div class="field"><label>Solde initial (€)</label><input id="nm-bal" type="number" inputmode="decimal" step="0.5" value="0"></div>
     <button class="btn btn-amber" onclick="saveMember()">CRÉER</button>`;
   openSheet();setTimeout(()=>document.getElementById('nm-name').focus(),100);
 }
@@ -1611,7 +1611,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '2.0.5';
+const APP_VERSION = '2.0.6';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1724,7 +1724,7 @@ function openTresorerie() {
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
           <div style="font-size:18px">${a.icon}</div>
           <div style="font-family:var(--mono);font-size:11px;color:var(--muted);width:60px">${a.label}</div>
-          <input id="init-${a.id}" type="number" step="0.5" placeholder="${(t[a.id]?.balance||0).toFixed(2)}" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
+          <input id="init-${a.id}" type="number" inputmode="decimal" step="0.5" placeholder="${(t[a.id]?.balance||0).toFixed(2)}" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
         </div>`).join('')}
         <button class="btn btn-amber" style="width:100%;padding:11px;margin-top:4px;font-size:12px;letter-spacing:1px" onclick="saveTresoInit()">VALIDER L'INITIALISATION</button>
       </div>
@@ -1742,7 +1742,7 @@ function openTresorerie() {
         </select>
       </div>
       <div class="field" style="margin-bottom:8px">
-        <input id="treso-vir-amount" type="number" step="0.5" min="0.1" placeholder="Montant (€)">
+        <input id="treso-vir-amount" type="number" inputmode="decimal" step="0.5" min="0.1" placeholder="Montant (€)">
       </div>
       <div class="field" style="margin-bottom:8px">
         <input id="treso-vir-comment" type="text" placeholder="Motif (optionnel)">
@@ -1791,7 +1791,7 @@ function openTresoMove(accountId) {
     <div style="font-family:var(--mono);font-size:13px;color:${b >= 0 ? 'var(--green)' : 'var(--red)'};margin-bottom:20px">Solde actuel : ${b >= 0 ? '+' : ''}${b.toFixed(2)} €</div>
     <div class="field">
       <label>Montant (€)</label>
-      <input id="tm-amount" type="number" step="0.5" min="0.01" placeholder="0.00">
+      <input id="tm-amount" type="number" inputmode="decimal" step="0.5" min="0.01" placeholder="0.00">
     </div>
     <div class="field">
       <label>Libellé</label>
