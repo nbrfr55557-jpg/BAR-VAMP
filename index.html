@@ -1611,11 +1611,10 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '2.0.2';
+const APP_VERSION = '2.0.3';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
-    // Force check update au lancement
     reg.update();
     reg.addEventListener('updatefound', () => {
       const w = reg.installing;
@@ -1626,20 +1625,35 @@ if('serviceWorker' in navigator){
       });
     });
   }).catch(() => {});
-
-  // Détection version via fetch du sw.js (léger, pas de HTML entier)
-  async function checkVersion(){
-    try{
-      const r = await fetch('./sw.js?_='+Date.now(), {cache:'no-store'});
-      const txt = await r.text();
-      const match = txt.match(/VERSION\s*=\s*'([^']+)'/);
-      if(match && match[1] && match[1] !== APP_VERSION){
-        showUpdateBanner(match[1]);
-      }
-    }catch(e){}
-  }
-  setTimeout(checkVersion, 3000);
 }
+
+// Vérification version robuste — fetch sw.js ET index.html avec no-cache
+// Démarre immédiatement ET se répète toutes les 60s (utile si l'appli reste ouverte)
+async function checkVersion(){
+  try{
+    // Essai 1 : lire la version dans sw.js
+    const r = await fetch('./sw.js?_='+Date.now(), {cache:'no-store'});
+    const txt = await r.text();
+    const match = txt.match(/VERSION\s*=\s*'([^']+)'/);
+    if(match && match[1] && match[1] !== APP_VERSION){
+      showUpdateBanner(match[1]);
+      return;
+    }
+  }catch(e){}
+  try{
+    // Essai 2 : lire la version dans index.html (fallback Safari)
+    const r2 = await fetch('./index.html?_='+Date.now(), {cache:'no-store'});
+    const txt2 = await r2.text();
+    const match2 = txt2.match(/APP_VERSION\s*=\s*'([^']+)'/);
+    if(match2 && match2[1] && match2[1] !== APP_VERSION){
+      showUpdateBanner(match2[1]);
+    }
+  }catch(e){}
+}
+
+// Lancement immédiat + répétition toutes les 60s
+checkVersion();
+setInterval(checkVersion, 60000);
 
 function showUpdateBanner(newVersion=''){
   if(document.getElementById('update-banner'))return;
