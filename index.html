@@ -703,7 +703,8 @@ function bulkAction(dir){
   if(!amount||amount<=0)return toast('Montant invalide','ko');
   if(!selIds.size)return toast('Aucun membre sélectionné','ko');
   const comment=document.getElementById('bulk-comment').value.trim();
-  const baseLabel=(dir==='add'?'Crédit':'Débit')+' collectif';
+  const isCollectif=selIds.size>1;
+  const baseLabel=(dir==='add'?'Crédit':'Débit')+(isCollectif?' collectif':' individuel');
   const label=comment?baseLabel+' — '+comment:baseLabel;
   const names=[...selIds].map(id=>getM(id)?.name).filter(Boolean);
   const verb=dir==='add'?'crédités':'débités';
@@ -943,7 +944,13 @@ function openAdminMember(id){
   const m=getM(id);if(!m)return;
   const b=m.balance||0;
   const balCls=b>0?'var(--green)':b<0?'var(--red)':'var(--muted)';
-  const typeLabel={conso:'Consommation',recharge:'Recharge',credit:'Crédit collectif',debit:'Débit collectif'};
+  const getTypeLabel=(h)=>{
+    if(h.type==='conso')return'Consommation';
+    if(h.type==='recharge')return'Recharge';
+    if(h.type==='credit')return(h.label||'').toLowerCase().includes('collectif')?'Crédit collectif':'Crédit individuel';
+    if(h.type==='debit')return(h.label||'').toLowerCase().includes('collectif')?'Débit collectif':'Débit individuel';
+    return h.type;
+  };
   const typeColor={conso:'var(--red)',recharge:'var(--green)',credit:'var(--amber)',debit:'var(--muted)'};
   const hist=m.history||[];
 
@@ -957,7 +964,7 @@ function openAdminMember(id){
       <div style="width:8px;height:8px;border-radius:50%;background:${typeColor[h.type]||'var(--muted)'};flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${h.label}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${typeLabel[h.type]||h.type}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${getTypeLabel(h)}</div>
       </div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${isPos?'var(--green)':'var(--red)'};white-space:nowrap">${isPos?'+':'-'}${h.amount.toFixed(2)} €</div>
       <button onclick="askCancel('${cbKey}')" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;font-family:var(--mono);padding:4px 8px;cursor:pointer;flex-shrink:0">✕</button>
@@ -1018,7 +1025,13 @@ function saveAdminDebit(id){
 }
 
 function renderAdminGlobalHist(){
-  const typeLabel={conso:'Conso',recharge:'Recharge',credit:'Crédit coll.',debit:'Débit coll.'};
+  const getGlobalTypeLabel=(h)=>{
+    if(h.type==='conso')return'Conso';
+    if(h.type==='recharge')return'Recharge';
+    if(h.type==='credit')return(h.label||'').toLowerCase().includes('collectif')?'Crédit coll.':'Crédit indiv.';
+    if(h.type==='debit')return(h.label||'').toLowerCase().includes('collectif')?'Débit coll.':'Débit indiv.';
+    return h.type;
+  };
   const typeColor={conso:'var(--red)',recharge:'var(--green)',credit:'var(--amber)',debit:'var(--muted)'};
   // Collecter toutes les transactions avec référence membre
   const allTx=[];
@@ -1050,7 +1063,7 @@ function renderAdminGlobalHist(){
       <div style="width:8px;height:8px;border-radius:50%;background:${typeColor[tx.type]||'var(--muted)'};flex-shrink:0"></div>
       <div style="flex:1;min-width:0">
         <div style="font-size:13px;font-weight:500;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${tx.memberName} — ${tx.label}</div>
-        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${typeLabel[tx.type]||tx.type}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px">${ds} · ${getGlobalTypeLabel(tx)}</div>
       </div>
       <div style="font-family:var(--mono);font-size:13px;font-weight:500;color:${isPos?'var(--green)':'var(--red)'};white-space:nowrap;flex-shrink:0">${isPos?'+':'-'}${tx.amount.toFixed(2)} €</div>
       <button onclick="askCancelGh(${i})" style="background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;font-family:var(--mono);padding:4px 8px;cursor:pointer;flex-shrink:0">✕</button>
@@ -1611,7 +1624,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '2.0.8';
+const APP_VERSION = '2.0.9';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
