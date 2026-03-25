@@ -535,12 +535,6 @@ function validerConso(){
   addTx(currentMemberId,'conso',label,amount);
   consoCount=0;
   updateConsoRecap();
-  // Flash vert sur le solde
-  const balEl=document.getElementById('dash-balance');
-  if(balEl){
-    balEl.style.transition='none';
-    balEl.style.color='var(--green)';
-  }
   // Déconnexion immédiate après validation
   doLogout();
 }
@@ -1799,7 +1793,7 @@ function renderTresoHistHTML() {
   const t = getTreso();
   const all = [];
   TRESO_ACCOUNTS.forEach(a => {
-    (t[a.id]?.history || []).forEach(h => all.push({ ...h, accountId: a.id, accountLabel: a.label, accountIcon: a.icon }));
+    (t[a.id]?.history || []).forEach((h, i) => all.push({ ...h, accountId: a.id, accountLabel: a.label, accountIcon: a.icon, _idx: i }));
   });
   all.sort((a, b) => new Date(b.date) - new Date(a.date));
   if (!all.length) return `<div style="color:var(--muted);font-size:13px;text-align:center;padding:10px">Aucun mouvement</div>`;
@@ -1807,15 +1801,90 @@ function renderTresoHistHTML() {
     const isPos = h.amount > 0;
     const d = new Date(h.date);
     const ds = d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }) + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
-    return `<div class="hist-item">
+    return `<div class="hist-item" onclick="openEditTresoMove('${h.accountId}',${h.id})" style="cursor:pointer;transition:background .12s" onmouseenter="this.style.background='var(--s2)'" onmouseleave="this.style.background=''">
       <div class="hist-dot" style="background:${isPos ? 'var(--green)' : 'var(--red)'}"></div>
       <div class="hist-info">
         <div class="hist-label">${h.accountIcon} ${h.accountLabel} — ${h.label}</div>
-        <div class="hist-date">${ds}</div>
+        <div class="hist-date">${ds} · <span style="color:var(--amber);font-size:9px;letter-spacing:1px">✎ MODIFIER</span></div>
       </div>
       <div class="hist-amount ${isPos ? 'pos' : 'neg'}">${isPos ? '+' : ''}${h.amount.toFixed(2)} €</div>
     </div>`;
   }).join('');
+}
+
+function openEditTresoMove(accountId, entryId) {
+  const t = getTreso();
+  const acc = t[accountId];
+  if (!acc) return;
+  const idx = acc.history.findIndex(h => h.id === entryId);
+  if (idx < 0) return;
+  const h = acc.history[idx];
+  const a = TRESO_ACCOUNTS.find(x => x.id === accountId);
+  const dateStr = h.date ? h.date.slice(0, 10) : todayStr();
+  const absAmount = Math.abs(h.amount);
+
+  document.getElementById('sheet-body').innerHTML = `
+    <div class="sheet-title">✎ Modifier l'opération</div>
+    <div style="font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:16px;letter-spacing:1px">${a.icon} ${a.label}</div>
+    <div class="field">
+      <label>Libellé</label>
+      <input id="edit-treso-label" type="text" value="${h.label.replace(/"/g,'&quot;')}">
+    </div>
+    <div class="field">
+      <label>Montant (€) — positif ou négatif</label>
+      <input id="edit-treso-amount" type="number" inputmode="decimal" step="0.01" value="${h.amount}">
+    </div>
+    <div class="field">
+      <label>Date</label>
+      <input id="edit-treso-date" type="date" value="${dateStr}" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;color-scheme:dark">
+    </div>
+    <button class="btn btn-amber" style="width:100%;padding:14px;font-size:14px;margin-bottom:8px" onclick="saveEditTresoMove('${accountId}',${entryId})">✓ ENREGISTRER</button>
+    <button class="btn btn-red" style="width:100%;padding:12px;font-size:13px;margin-bottom:8px" onclick="deleteEditTresoMove('${accountId}',${entryId})">🗑 SUPPRIMER CETTE OPÉRATION</button>
+    <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:11px" onclick="openTresorerie()">← Annuler</button>`;
+  openSheet();
+}
+
+function saveEditTresoMove(accountId, entryId) {
+  const label = document.getElementById('edit-treso-label').value.trim();
+  const amount = parseFloat(document.getElementById('edit-treso-amount').value);
+  const dateVal = document.getElementById('edit-treso-date').value;
+  if (!label) return toast('Libellé requis', 'ko');
+  if (isNaN(amount)) return toast('Montant invalide', 'ko');
+
+  const t = getTreso();
+  const acc = t[accountId];
+  const idx = acc.history.findIndex(h => h.id === entryId);
+  if (idx < 0) return toast('Opération introuvable', 'ko');
+
+  // Recalculer le solde : annuler l'ancien montant, appliquer le nouveau
+  const oldAmount = acc.history[idx].amount;
+  acc.balance = Math.round((acc.balance - oldAmount + amount) * 100) / 100;
+  acc.history[idx].label = label;
+  acc.history[idx].amount = Math.round(amount * 100) / 100;
+  acc.history[idx].date = dateVal ? new Date(dateVal).toISOString() : acc.history[idx].date;
+
+  saveTreso(t);
+  toast('Opération modifiée', 'ok');
+  closeSheet();
+  renderTresoPreview();
+  openTresorerie();
+}
+
+function deleteEditTresoMove(accountId, entryId) {
+  const t = getTreso();
+  const acc = t[accountId];
+  const idx = acc.history.findIndex(h => h.id === entryId);
+  if (idx < 0) return toast('Opération introuvable', 'ko');
+
+  // Annuler le montant de cette opération dans le solde
+  acc.balance = Math.round((acc.balance - acc.history[idx].amount) * 100) / 100;
+  acc.history.splice(idx, 1);
+
+  saveTreso(t);
+  toast('Opération supprimée', 'ok');
+  closeSheet();
+  renderTresoPreview();
+  openTresorerie();
 }
 
 function openTresoMove(accountId) {
