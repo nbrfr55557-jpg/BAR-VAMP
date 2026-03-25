@@ -1141,6 +1141,10 @@ function openInitMember(id){
       <label>Solde initial (€)</label>
       <input id="init-amount" type="number" inputmode="decimal" step="0.5" placeholder="ex : 10.00 ou -5.00" value="${m.balance||''}">
     </div>
+    <div class="field">
+      <label>Date du solde initial</label>
+      <input id="init-date" type="date" value="${todayStr()}" style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-family:var(--sans);font-size:15px;outline:none;color-scheme:dark">
+    </div>
     <button class="btn btn-amber" onclick="saveInitMember('${id}')">ENREGISTRER</button>`;
   openSheet();
   setTimeout(()=>document.getElementById('init-amount').focus(),100);
@@ -1149,11 +1153,13 @@ function openInitMember(id){
 function saveInitMember(id){
   const m=getM(id);if(!m)return;
   const val=parseFloat(document.getElementById('init-amount').value);
+  const initDateVal=document.getElementById('init-date')?.value||null;
+  const initDate=initDateVal?new Date(initDateVal).toISOString():new Date().toISOString();
   if(isNaN(val))return toast('Valeur invalide','ko');
   m.balance=Math.round(val*100)/100;
   // Ajouter une transaction d'initialisation dans l'historique
   if(!m.history)m.history=[];
-  m.history.unshift({id:Date.now(),date:new Date().toISOString(),type:'recharge',label:'Initialisation du compte',amount:Math.abs(val)});
+  m.history.unshift({id:Date.now(),date:initDate,type:'recharge',label:'Initialisation du compte',amount:Math.abs(val)});
   // Si négatif, corriger le type
   if(val<0){
     m.history[0].type='debit';
@@ -1638,7 +1644,7 @@ function toast(msg,type=''){
 }
 
 // Version du PWA — incrémenter à chaque mise à jour
-const APP_VERSION = '2.1.0';
+const APP_VERSION = '2.1.1';
 
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('./sw.js').then(reg => {
@@ -1753,6 +1759,10 @@ function openTresorerie() {
           <div style="font-family:var(--mono);font-size:11px;color:var(--muted);width:60px">${a.label}</div>
           <input id="init-${a.id}" type="number" inputmode="decimal" step="0.5" placeholder="${(t[a.id]?.balance||0).toFixed(2)}" style="flex:1;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none">
         </div>`).join('')}
+        <div style="margin-bottom:10px;margin-top:4px">
+          <div style="font-family:var(--mono);font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px">Date du solde initial</div>
+          <input id="treso-init-date" type="date" value="${todayStr()}" style="width:100%;background:var(--s3);border:1px solid var(--border);border-radius:var(--r-sm);padding:9px 12px;color:var(--text);font-family:var(--mono);font-size:13px;outline:none;color-scheme:dark">
+        </div>
         <button class="btn btn-amber" style="width:100%;padding:11px;margin-top:4px;font-size:12px;letter-spacing:1px" onclick="saveTresoInit()">VALIDER L'INITIALISATION</button>
       </div>
     </div>
@@ -1903,6 +1913,8 @@ function toggleTresoInit() {
 
 function saveTresoInit() {
   const t = getTreso();
+  const initDateVal = document.getElementById('treso-init-date')?.value||null;
+  const initDate = initDateVal ? new Date(initDateVal).toISOString() : new Date().toISOString();
   let changed = false;
   TRESO_ACCOUNTS.forEach(a => {
     const val = document.getElementById('init-'+a.id)?.value;
@@ -1913,7 +1925,7 @@ function saveTresoInit() {
     if (!t[a.id]) t[a.id] = { balance: 0, history: [] };
     t[a.id].balance = Math.round(amount * 100) / 100;
     // Enregistrer l'init dans l'historique
-    t[a.id].history.unshift({ id: Date.now(), date: new Date().toISOString(), label: 'Solde initial', comment: `(était ${prev.toFixed(2)} €)`, amount: Math.round((amount - prev) * 100) / 100 });
+    t[a.id].history.unshift({ id: Date.now(), date: initDate, label: 'Solde initial', comment: `(était ${prev.toFixed(2)} €)`, amount: Math.round((amount - prev) * 100) / 100 });
     changed = true;
   });
   if (!changed) return toast('Aucune valeur saisie', 'ko');
